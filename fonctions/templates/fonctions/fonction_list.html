@@ -1,0 +1,111 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Fonctions</h2><br><br><br>
+<form id="importForm" method="POST" enctype="multipart/form-data"
+      action="{% url 'fonctions:import_excel' %}" class="mb-4">
+  {% csrf_token %}
+  <div class="input-group">
+    <input id="excelInput" type="file" name="excel_file" accept=".xlsx,.xls" required class="form-control">
+  </div>
+</form>
+
+<script>
+function confirmImport() {
+    return confirm("⚠️ Cela va supprimer toutes les fonctions existantes. Continuer ?");
+}
+
+(function () {
+    const input = document.getElementById('excelInput');
+    const form  = document.getElementById('importForm');
+
+    input.addEventListener('change', function () {
+      if (!input.files || !input.files.length) return;
+
+      // ✅ Une seule confirmation ici
+      if (confirm("⚠️ Cela va supprimer toutes les fonctions existantes. Continuer ?")) {
+        // Ne PAS désactiver l'input (sinon le fichier n'est pas envoyé)
+        // Utiliser requestSubmit() plutôt que submit() pour respecter HTML5/CSRF
+        form.requestSubmit();
+      } else {
+        // Permettre de re-ouvrir le sélecteur proprement
+        input.value = "";
+      }
+    });
+  })();
+
+function goToAction(action) {
+    const selected = document.querySelector('input[name="selected_fonction"]:checked');
+    if (!selected) {
+        alert("❗ Veuillez sélectionner une fonction.");
+        return;
+    }
+
+    const code = selected.value;
+    let url = "";
+
+    if (action === "view") {
+        url = `/fonctions/${code}/`;
+    } else if (action === "edit") {
+        url = `/fonctions/${code}/modifier/`;
+    } else if (action === "delete") {
+        url = `/fonctions/${code}/supprimer/`;
+    }
+
+    window.location.href = url;
+}
+</script>
+<form method="get" class="row mb-4 g-3">
+    <div class="col-md-4">
+        <input type="text" name="q" class="form-control" placeholder="🔍 Filtrer par Code ou Intitule" value="{{ filters.q }}">
+    </div>
+    <div class="col-md-3 text-end">
+        <button type="submit" class="btn btn-primary">🔎 Filtrer</button>
+        <a href="{% url 'fonctions:list' %}" class="btn btn-secondary">♻️ Réinitialiser</a>
+    </div>
+</form>
+<div class="alert alert-info">Le nombre de fonctions trouvées : {{ fonctions|length }}</div>
+
+<form id="fonctionForm" method="get">
+    <div class="row mb-3 align-items-center">
+    <!-- ⬅️ Export à gauche -->
+    <div class="col d-flex justify-content-start">
+      <a href="{% url 'fonctions:export_excel' %}?{{ request.GET.urlencode }}"
+         class="btn btn-success">
+        Telecharger le Fichier (Fonctions)
+      </a>
+    </div>
+    <div class="col-auto d-flex gap-2 ms-auto">
+      <button type="button" class="btn btn-info" onclick="goToAction('view')">👁️ Afficher</button>
+      <button type="button" class="btn btn-warning" onclick="goToAction('edit')">✏️ Modifier</button>
+      <button type="button" class="btn btn-danger" onclick="goToAction('delete')">🗑️ Supprimer</button>
+    </div>
+  </div>
+
+    <table class="table table-bordered align-middle">
+        <thead class="table-light">
+            <tr>
+                <th style="background-color: #c7c73dff;" class="text-center">Sélection</th>
+                <th style="background-color: #c7c73dff;" class="text-center">Code</th>
+                <th style="background-color: #c7c73dff;">Intitulé</th>
+                <th style="background-color: #c7c73dff;">Intitulé Complet</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for f in fonctions %}
+            <tr>
+                <td class="text-center">
+                    <input type="radio" name="selected_fonction" value="{{ f.Code }}">
+                </td>
+                <td class="text-center">{{ f.Code }}</td>
+                <td>{{ f.Intitule }}</td>
+                <td>{{ f.Intitule_Complet }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</form>
+
+{% if not fonctions %}
+    <div class="alert alert-warning">Aucune fonction trouvée.</div>
+{% endif %}
+{% endblock %}

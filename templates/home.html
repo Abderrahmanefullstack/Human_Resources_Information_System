@@ -1,0 +1,128 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<style>
+.card-custom {
+  background-color: #c7c73dff;
+  border-color: #c7c73dff;
+  color: white;
+}
+</style>
+<div class="container-fluid main-content">
+
+    <!-- ✅ Bandeau de bienvenue -->
+    <div class="bg-white p-5 rounded shadow-sm mb-4 border-start border-4 border-warning">
+        <h6 >Accédez rapidement aux sections Agents, Fonctions ou Entités via le menu latéral. </h6>
+    </div>
+
+    <!-- ✅ Cartes résumé -->
+    <div class="row g-4 mb-4">
+    <!-- ✅ Carte Agents -->
+    <div class="col-md-4">
+        <div class="card shadow-sm text-white" style="background-color: #B23214; border-color: #B23214;">
+            <div class="card-body">
+                <h5 class="card-title"><i class="fas fa-users me-2"></i>Agents</h5>
+                <p class="card-text fs-3">{{ nb_agents }}</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ✅ Carte Fonctions -->
+    <div class="col-md-4">
+        <div class="card shadow-sm text-white" style="background-color: #c7c73dff; border-color: #c7c73dff;">
+            <div class="card-body">
+                <h5 class="card-title"><i class="fas fa-briefcase me-2"></i>Fonctions</h5>
+                <p class="card-text fs-3">{{ nb_fonctions }}</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ✅ Carte Entités -->
+    <div class="col-md-4">
+        <div class="card shadow-sm text-white" style="background-color: #ffc107; border-color: #ffc107;">
+            <div class="card-body">
+                <h5 class="card-title"><i class="fas fa-building me-2"></i>Entités</h5>
+                <p class="card-text fs-3">{{ nb_entites }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+    <!-- ✅ Graphique genre -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card shadow-sm">
+                <div class="card-header bg-light fw-bold">
+                    Répartition Hommes / Femmes
+                </div>
+                <div class="card-body">
+                    <canvas id="genreChart" height="150"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- ✅ Zone d'annonces RH -->
+        <div class="col-md-6">
+  <div class="card shadow-sm border-start border-4 border-primary">
+    <div class="card-body">
+      <div class="d-flex justify-content-between align-items-center mb-2">
+        <h5 class="card-title text-primary mb-0">
+          <i class="fas fa-bullhorn me-2"></i>Informations RH
+        </h5>
+        
+      </div>
+
+      {% if viviers_inactifs %}
+  <ul class="list-group list-group-flush">
+    {% for v in viviers_inactifs %}
+      <li class="list-group-item d-flex justify-content-between align-items-start">
+        <div class="me-3">
+          <div class="fw-semibold">
+            Vivier {{ v.NumCommission }} — {{ v.FonctionCible }}
+          </div>
+          <div class="small text-muted">
+            Créé le {{ v.DateCreation|date:"d/m/Y" }}
+            {% if v.DirectionReseau %} • {{ v.DirectionReseau }}{% endif %}
+          </div>
+        </div>
+        <span class="badge bg-secondary">Non actif</span>
+      </li>
+    {% endfor %}
+  </ul>
+{% else %}
+  <div class="text-muted">Aucun vivier non actif pour le moment.</div>
+{% endif %}
+
+    </div>
+  </div>
+</div>
+
+    </div>
+
+</div>
+
+<!-- ✅ Script Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    const ctx = document.getElementById('genreChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Hommes', 'Femmes'],
+            datasets: [{
+                label: 'Genre',
+                data: [{{ nb_hommes }}, {{ nb_femmes }}],
+                backgroundColor: ['#007bff', '#e83e8c'],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            plugins: {
+                legend: { position: 'bottom' }
+            }
+        }
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,233 @@
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+{% load static form_extras %}
+
+<style>
+  :root{
+    --vx-primary:#2563eb;         /* bleu moderne */
+    --vx-primary-2:#0ea5e9;       /* bleu clair */
+    --vx-bg:#f6f8fb;              /* fond doux */
+    --vx-ink:#0f172a;             /* encre */
+    --vx-muted:#64748b;           /* texte secondaire */
+    --vx-card:#ffffffcc;          /* glass card */
+    --vx-br:16px;
+  }
+  body{ background:var(--vx-bg); }
+
+  /* HERO */
+  .vx-hero{
+    position:relative;
+    border-radius:24px;
+    padding:28px 24px;
+    background:linear-gradient(135deg,var(--vx-primary) 0%, var(--vx-primary-2) 100%);
+    color:#fff;
+    box-shadow:0 18px 45px rgba(37,99,235,.25);
+    overflow:hidden;
+  }
+  .vx-hero::after{
+    content:"";
+    position:absolute; inset:0;
+    background:
+      radial-gradient(70rem 35rem at 110% -10%, rgba(255,255,255,.15), transparent 50%),
+      radial-gradient(40rem 25rem at -10% 120%, rgba(255,255,255,.12), transparent 50%);
+    pointer-events:none;
+  }
+  .vx-hero h1{ font-weight:800; letter-spacing:.2px; }
+  .vx-chip{
+    background:rgba(255,255,255,.2);
+    border:1px solid rgba(255,255,255,.35);
+    padding:6px 11px; border-radius:999px; font-weight:600;
+  }
+
+  /* CARDS (glass) */
+  .vx-card{
+    border:1px solid rgba(15,23,42,.06);
+    border-radius:var(--vx-br);
+    box-shadow:0 12px 40px rgba(2,6,23,.06);
+    backdrop-filter: blur(6px);
+    background:var(--vx-card);
+  }
+  .vx-card .card-header{
+    border-bottom:1px dashed rgba(2,6,23,.08);
+    background:linear-gradient(180deg,rgba(248,250,252,.9),rgba(248,250,252,.6));
+    border-radius:var(--vx-br) var(--vx-br) 0 0;
+    font-weight:700; color:var(--vx-ink);
+  }
+
+  /* FLOATING INPUTS */
+  .form-floating > label{ color:var(--vx-muted); }
+  .form-control, .form-select{
+    border-radius:12px;
+    border:1px solid rgba(2,6,23,.12);
+  }
+  .form-control:focus, .form-select:focus{
+    border-color: var(--vx-primary);
+    box-shadow: 0 0 0 .25rem rgba(37,99,235,.15);
+  }
+
+  /* ACTION BAR (sticky footer on card) */
+  .vx-actions{
+    position:sticky; bottom:-1px;
+    background:linear-gradient(180deg,rgba(255,255,255,.85),#fff);
+    border-top:1px solid rgba(2,6,23,.08);
+    border-radius:0 0 var(--vx-br) var(--vx-br);
+  }
+
+  /* Badges */
+  .vx-badge{
+    border:1px solid rgba(2,6,23,.12);
+    border-radius:999px;
+    padding:.25rem .6rem;
+    background:#fff;
+    color:var(--vx-ink);
+    font-weight:600;
+  }
+
+  /* Table agents (si tu utilises ce même style ailleurs) */
+  .vx-table thead th{
+    background:#f8fafc;
+    border-bottom:1px dashed rgba(2,6,23,.08) !important;
+    font-weight:700;
+  }
+</style>
+
+<div class="container-fluid" style="max-width:1200px;">
+
+  <!-- HERO -->
+  <div class="vx-hero mb-4">
+    <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
+      <div>
+        <div class="vx-chip mb-2">Vivier {{ v.NumCommission }}</div>
+        <h1 class="h3 mb-1">Renseigner la commission</h1>
+        <div class="opacity-75 fw-semibold">
+          Fonction cible : <span class="text-white">{{ v.FonctionCible }}</span>
+          · Créé le {{ v.DateCreation|date:"d/m/Y" }}
+        </div>
+      </div>
+      <a class="btn btn-light text-primary fw-semibold shadow-sm"
+         href="{% url 'vivier:update' v.pk %}">
+        <i class="fa fa-arrow-left me-2"></i>Retour au vivier
+      </a>
+    </div>
+  </div>
+
+  <!-- Carte Agent -->
+  <div class="card vx-card mb-4">
+    <div class="card-header">Fiche agent</div>
+    <div class="card-body">
+      <div class="row g-3">
+        <div class="col-md-2">
+          <span class="vx-badge d-inline-block mb-1">Matricule</span>
+          <div class="fs-5 fw-bold">{{ agent.matricule }}</div>
+        </div>
+        <div class="col-md-3">
+          <span class="vx-badge d-inline-block mb-1">Nom</span>
+          <div class="fs-5 fw-bold text-uppercase">{{ agent.nom }}</div>
+        </div>
+        <div class="col-md-3">
+          <span class="vx-badge d-inline-block mb-1">Prénom</span>
+          <div class="fs-5 fw-bold">{{ agent.prenom }}</div>
+        </div>
+        <div class="col-md-4">
+          <span class="vx-badge d-inline-block mb-1">Fonction</span>
+          <div class="fs-6 fw-semibold">{{ agent.fonction|default:"—" }}</div>
+        </div>
+
+        <div class="col-md-3">
+          <span class="vx-badge d-inline-block mb-1">Date fonction</span>
+          <div class="fw-semibold">{{ agent.date_fonction|date:"d/m/Y"|default:"—" }}</div>
+        </div>
+        <div class="col-md-3">
+          <span class="vx-badge d-inline-block mb-1">Affectation code</span>
+          <div class="fw-semibold">{{ agent.aff_code|default:"—" }}</div>
+        </div>
+        <div class="col-md-6">
+          <span class="vx-badge d-inline-block mb-1">Affectation libellé</span>
+          <div class="fw-semibold">{{ agent.aff_lib|default:"—" }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Formulaire Commission -->
+  <form method="post" class="card vx-card overflow-hidden">
+    {% csrf_token %}
+    <div class="card-header">Saisie de la commission</div>
+
+    <div class="card-body">
+      <div class="row g-3">
+        <div class="col-md-6">
+          <div class="form-floating">
+            {{ form.Sanction|add_class:"form-control" }}
+            <label>{{ form.Sanction.label }}</label>
+          </div>
+          {% if form.Sanction.errors %}<div class="text-danger small mt-1">{{ form.Sanction.errors }}</div>{% endif %}
+        </div>
+
+        <div class="col-md-2">
+          <div class="form-floating">
+            {{ form.PI_n_1|add_class:"form-control" }}
+            <label>{{ form.PI_n_1.label }}</label>
+          </div>
+        </div>
+        <div class="col-md-2">
+          <div class="form-floating">
+            {{ form.PI_n_2|add_class:"form-control" }}
+            <label>{{ form.PI_n_2.label }}</label>
+          </div>
+        </div>
+        <div class="col-md-2">
+          <div class="form-floating">
+            {{ form.PI_n_3|add_class:"form-control" }}
+            <label>{{ form.PI_n_3.label }}</label>
+          </div>
+        </div>
+
+        <div class="col-12">
+          <div class="form-floating">
+            {{ form.AvisCommission|add_class:"form-control" }}
+            <label>{{ form.AvisCommission.label }}</label>
+          </div>
+        </div>
+
+        <div class="col-md-3">
+          <div class="form-floating">
+            {{ form.Note|add_class:"form-control" }}
+            <label>{{ form.Note.label }}</label>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="form-floating">
+            {{ form.Decision|add_class:"form-select" }}
+            <label>{{ form.Decision.label }}</label>
+          </div>
+        </div>
+        <div class="col-md-5">
+          <div class="form-floating">
+            {{ form.MotifDecision|add_class:"form-control" }}
+            <label>{{ form.MotifDecision.label }}</label>
+          </div>
+        </div>
+
+        <div class="col-12">
+          <div class="form-floating">
+            {{ form.Caractere|add_class:"form-control" }}
+            <label>{{ form.Caractere.label }}</label>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="vx-actions p-3 d-flex justify-content-end gap-2">
+      <a href="{% url 'vivier:update' v.pk %}" class="btn btn-outline-secondary">
+        Annuler
+      </a>
+      <button class="btn btn-primary px-4 fw-semibold">
+        <i class="fa fa-save me-2"></i>Enregistrer
+      </button>
+    </div>
+  </form>
+</div>
+
+{% endblock %}

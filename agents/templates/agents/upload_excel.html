@@ -1,0 +1,221 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-4">
+    <!-- En-tête avec bouton de retour -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>
+            <i class="fas fa-file-import me-2"></i>Importation des Agents
+        </h2>
+        <a href="{% url 'agents:list' %}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left me-1"></i> Retour à la liste
+        </a>
+    </div>
+
+    <!-- Carte principale -->
+    <div class="card shadow-lg">
+        <div class="card-header bg-primary text-white">
+            <div class="d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="fas fa-cloud-upload-alt me-2"></i>Téléversement du fichier
+                </h5>
+                <small>Format requis : .xlsx (Excel)</small>
+            </div>
+        </div>
+        
+        <div class="card-body">
+            <!-- Formulaire d'upload -->
+            <form id="uploadForm" method="post" enctype="multipart/form-data" 
+                  action="{% url 'agents:import_excel' %}" class="needs-validation" novalidate>
+                {% csrf_token %}
+                
+                <div class="mb-4">
+                    <label for="excelFile" class="form-label fw-bold">
+                        <i class="fas fa-file-excel text-success me-2"></i>Sélectionnez votre fichier
+                    </label>
+                    <input type="file" class="form-control form-control-lg" id="excelFile" 
+                           name="excel_file" accept=".xlsx" required>
+                    <div class="form-text">
+                        Le fichier doit contenir exactement 181 colonnes correspondant à la base de données
+                    </div>
+                    <div class="invalid-feedback">
+                        Veuillez sélectionner un fichier Excel (.xlsx) valide
+                    </div>
+                </div>
+
+                <!-- Prévisualisation dynamique -->
+                <div class="mb-4 border p-3 rounded" id="filePreview" style="display:none;">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <h6 class="mb-0">
+                            <i class="fas fa-table me-2"></i>Aperçu des colonnes détectées
+                        </h6>
+                        <span class="badge bg-info" id="columnCount"></span>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-sm table-bordered" id="columnsTable">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>N°</th>
+                                    <th>Nom de colonne</th>
+                                    <th>Statut</th>
+                                </tr>
+                            </thead>
+                            <tbody id="columnsList"></tbody>
+                        </table>
+                    </div>
+                    <div class="alert alert-warning mt-2" id="validationAlert" style="display:none;">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <span id="validationMessage"></span>
+                    </div>
+                </div>
+
+                <div class="d-grid gap-2">
+                    <button type="submit" class="btn btn-success btn-lg" id="submitBtn">
+                        <i class="fas fa-upload me-2"></i>Lancer l'importation
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Section de résultats -->
+    <div class="mt-4" id="importResult">
+        {% if messages %}
+            {% for message in messages %}
+            <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}success{% endif %} alert-dismissible fade show">
+                <div class="d-flex align-items-center">
+                    <i class="fas {% if message.tags == 'error' %}fa-exclamation-circle{% else %}fa-check-circle{% endif %} me-3 fs-4"></i>
+                    <div>
+                        {{ message|safe }}
+                        {% if forloop.last %}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        {% endif %}
+    </div>
+</div>
+
+<!-- Intégration de SheetJS pour la lecture réelle des fichiers -->
+<script src="https://cdn.sheetjs.com/xlsx-0.19.3/package/dist/xlsx.full.min.js"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const excelFileInput = document.getElementById('excelFile');
+    const previewDiv = document.getElementById('filePreview');
+    const columnsTable = document.getElementById('columnsList');
+    const validationAlert = document.getElementById('validationAlert');
+    const validationMessage = document.getElementById('validationMessage');
+    const columnCount = document.getElementById('columnCount');
+    const expectedColumns = 181; // À adapter si nécessaire
+
+    // Liste des colonnes requises (exemple)
+    const requiredColumns = ['Matricule', 'Civilite', 'Nom', 'Prenom']; // Complétez avec les 181
+
+    excelFileInput.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        
+        if (file) {
+            const reader = new FileReader();
+            
+            reader.onload = function(e) {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                    const headers = [];
+                    
+                    // Extraction des en-têtes
+                    let range = XLSX.utils.decode_range(firstSheet['!ref']);
+                    for (let C = range.s.c; C <= range.e.c; ++C) {
+                        const cell = firstSheet[XLSX.utils.encode_cell({ r: range.s.r, c: C })];
+                        headers.push(cell ? cell.v : `Colonne ${C+1}`);
+                    }
+
+                    // Affichage du tableau
+                    columnsTable.innerHTML = '';
+                    headers.forEach((header, index) => {
+                        const isRequired = requiredColumns.includes(header);
+                        const statusClass = isRequired ? 'table-success' : 'table-warning';
+                        const statusText = isRequired ? 'Requis' : 'Optionnel';
+                        
+                        columnsTable.innerHTML += `
+                            <tr class="${statusClass}">
+                                <td>${index + 1}</td>
+                                <td>${header}</td>
+                                <td>${statusText}</td>
+                            </tr>
+                        `;
+                    });
+
+                    // Validation du nombre de colonnes
+                    if (headers.length !== expectedColumns) {
+                        validationMessage.innerHTML = `
+                            <strong>Attention :</strong> 
+                            ${headers.length} colonnes détectées (${expectedColumns} attendues)
+                        `;
+                        validationAlert.style.display = 'block';
+                    } else {
+                        validationAlert.style.display = 'none';
+                    }
+
+                    columnCount.textContent = `${headers.length} colonnes`;
+                    previewDiv.style.display = 'block';
+
+                } catch (error) {
+                    console.error("Erreur de lecture :", error);
+                    previewDiv.style.display = 'none';
+                }
+            };
+            
+            reader.readAsArrayBuffer(file);
+        } else {
+            previewDiv.style.display = 'none';
+        }
+    });
+
+    // Gestion de la soumission
+    document.getElementById('uploadForm').addEventListener('submit', function(e) {
+        if (!this.checkValidity()) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+        
+        this.classList.add('was-validated');
+        
+        if (this.checkValidity()) {
+            const submitBtn = document.getElementById('submitBtn');
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = `
+                <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                Traitement en cours...
+            `;
+            
+            // Ajout d'un faux délai pour démo (à retirer en prod)
+            setTimeout(() => {
+                submitBtn.innerHTML = `
+                    <i class="fas fa-sync-alt fa-spin me-2"></i>
+                    Finalisation...
+                `;
+            }, 1500);
+        }
+    });
+});
+</script>
+
+<style>
+    #filePreview {
+        transition: all 0.3s ease;
+    }
+    .card {
+        border-radius: 15px;
+    }
+    .card-header {
+        border-radius: 15px 15px 0 0 !important;
+    }
+</style>
+
+{% endblock %}

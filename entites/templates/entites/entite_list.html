@@ -1,0 +1,83 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<h2>Entités</h2><br><br><br>
+<div class="container-fluid px-3 py-3 d-flex flex-column" style="min-height: 75vh;">
+  <div class="row g-2 align-items-end mb-3">
+    <div class="col-md-6">
+      <form method="get" class="row g-2">
+        <div class="col-12 col-sm-8">
+          <input type="text"
+                 name="search"
+                 class="form-control"
+                 placeholder="🔍 Rechercher par libellé ou code"
+                 value="{{ request.GET.search|default:'' }}">
+        </div>
+        <div class="col-12 col-sm-4 d-flex gap-2">
+          <button type="submit" class="btn btn-primary">Rechercher</button>
+          {% if search or request.GET.search %}
+            <a href="{% url 'entites:list' %}" class="btn btn-outline-secondary w-100">Réinitialiser</a>
+          {% endif %}
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Barre d’actions CRUD (à droite) -->
+  <form id="entite-form" method="get" class="d-flex flex-column flex-grow-1 min-h-0">
+    <div class="row mb-3">
+  <div class="col text-end">
+    <div class="d-flex justify-content-end gap-2 mb-3 w-100">
+  <a href="{% url 'entites:create' %}" class="btn btn-success">
+    <i class="fas fa-plus me-1"></i> Ajouter
+  </a>
+  <button type="submit" formaction="{% url 'entites:update' %}" formmethod="get" class="btn btn-warning">
+    <i class="fas fa-edit me-1"></i> Modifier
+  </button>
+  <button type="submit" formaction="{% url 'entites:delete' %}" formmethod="get" class="btn btn-danger">
+    <i class="fas fa-trash me-1"></i> Supprimer
+  </button>
+</div>
+  </div>
+</div>
+
+
+    <!-- Tableau qui prend la place disponible -->
+    <div class="flex-grow-1 overflow-auto border rounded bg-white">
+      <table class="table table-hover table-striped align-middle mb-0">
+        <thead class="table-light text-center position-sticky top-0" style="z-index:1;">
+          <tr>
+            <th style="width: 40px; background-color:#e3b537ff;"></th>
+            <th style="background-color:#e3b537ff;">Code</th>
+            <th style="background-color:#e3b537ff;" class="text-start">Libellé</th>
+            <th style="background-color:#e3b537ff;" class="text-start">Arborescence</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for entite in entites %}
+            <tr>
+              <td class="text-center">
+                <input type="radio" name="selected" value="{{ entite.AffectationCode }}">
+              </td>
+              <td class="text-center">{{ entite.affectationCode_formate }}</td>
+              <td>{{ entite.AffectationLibelle }}</td>
+              <td>{{ entite.ArborescenceAffectation }}</td>
+            </tr>
+          {% empty %}
+            <tr>
+              <td colspan="4" class="text-center text-muted py-4">Aucune entité trouvée.</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </form>
+
+</div>
+
+<style>
+  /* Permet au bloc tableau de scroller correctement dans un parent flex */
+  .min-h-0 { min-height: 0; }
+</style>
+{% endblock %}

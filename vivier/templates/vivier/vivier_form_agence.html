@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container py-4">
+  <h4 class="mb-3">Nouveau vivier — Fonctions d’Agence</h4>
+
+  <form method="post" enctype="multipart/form-data" class="card p-3">
+    {% csrf_token %}
+
+    <div class="row g-3">
+      <div class="col-md-3">
+        <label class="form-label">N° Vivier (aperçu)</label>
+        {{ form.NumCommissionPreview }}
+        <div class="form-text">Le numéro sera attribué définitivement à l’enregistrement.</div>
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">Date</label>
+        {{ form.DateCreation }}
+      </div>
+      <div class="col-md-6">
+        <label class="form-label">Fonction cible</label>
+        {{ form.FonctionCible }}
+      </div>
+
+      <div class="col-md-6">
+        <label class="form-label">Direction / Réseau</label>
+        {{ form.DirectionReseau }}
+        <div class="form-text">
+          Liste dérivée automatiquement d’“Arborescence affectation” des agents (segment commençant par 064630..064634).
+        </div>
+      </div>
+
+      <div class="col-md-3">
+        <div class="form-check mt-4">
+          {{ form.Valide }} <label class="form-check-label">Validé</label>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">Date de validation</label>
+        {{ form.DateValidation }}
+      </div>
+
+      <div class="col-12">
+        <label class="form-label">Observation</label>
+        {{ form.Observation }}
+      </div>
+      <div class="col-12">
+        <label class="form-label">Pièce jointe</label>
+        {{ form.PieceJointe }}
+      </div>
+    </div>
+
+    <div class="text-end mt-3">
+      <a href="{% url 'vivier:list' %}" class="btn btn-outline-secondary">Annuler</a>
+      <button class="btn btn-primary">Enregistrer</button>
+    </div>
+  </form>
+</div>
+{% endblock %}

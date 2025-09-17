@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-4">
+
+  <!-- Hero + compteur -->
+  <div class="affx-hero d-flex justify-content-between align-items-center">
+    <div>
+      <div class="title h5 mb-1">Vérification des informations</div>
+  {% if progress %}
+    <div class="affx-muted mb-2">Traitement en série — agent {{ progress.current }} sur {{ progress.total }}</div>
+  {% endif %}
+
+  <form method="post">{% csrf_token %}
+    <div class="affx-card p-3 mb-3">
+      <div class="row g-3">
+        <div class="col-md-4 affx-field">
+          <label class="form-label">N° (prévisionnel)</label>
+          {{ form.NumeroAffectationPreview }}
+        </div>
+        <div class="col-md-4 affx-field">
+          <label class="form-label">Matricule</label>
+          {{ form.Matricule }}
+        </div>
+        <div class="col-md-4 affx-field">
+          <label class="form-label">Nom & Prénom</label>
+          <div class="form-control" disabled>{{ form.Nom.value }} {{ form.Prenom.value }}</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="affx-card p-3">
+      <div class="h6 mb-3">Partie ANCIENNE</div>
+      <div class="row g-3">
+        <div class="col-md-3 affx-field">
+          <label class="form-label">Fonction (Code)</label>{{ form.CodeFonctionAncien }}
+        </div>
+        <div class="col-md-5 affx-field">
+          <label class="form-label">Fonction (Libellé)</label>{{ form.LibelleFonctionAncien }}
+        </div>
+        <div class="col-md-2 affx-field">
+          <label class="form-label">Affectation (Code)</label>{{ form.CodeEntiteAncien }}
+        </div>
+        <div class="col-md-2 affx-field">
+          <label class="form-label">Affectation (Libellé)</label>{{ form.LibelleEntiteAncien }}
+        </div>
+      </div>
+    </div>
+
+    <div class="text-end mt-3">
+      <a href="{% url 'affectations:choose_type' %}" class="btn affx-btn-outline">Retour</a>
+      <button class="btn affx-btn">Suivant</button>
+    </div>
+  </form>
+</div>
+{% endblock %}

@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+{% load static %}
+{% load tz %}
+
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <title>SIRH</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <style>
+    :root{
+      --sidebar-w: 240px;
+      --navbar-h: 100px;
+      --bcp-orange: rgb(255,153,0);
+      --bcp-orange-hover: rgb(213,135,32);
+    }
+    body{
+      margin:0;
+      font-family:"Segoe UI",sans-serif;
+      background:#f8f9fa;
+    }
+
+    /* NAVBAR PLEIN ÉCRAN EN HAUT */
+    .navbar-custom{
+      position:fixed;
+      top:0; left:0; right:0;
+      height:var(--navbar-h);
+      background:#fff;
+      border-bottom:1px solid rgba(0,0,0,.06);
+      z-index:1060;
+      padding-inline:16px;
+    }
+    .navbar-custom .brand-logo{ height:90px; width:auto; margin-left:55px}
+    .nav-welcome {
+      position: absolute;
+      left: 33%;
+      transform: translateX(-55%); /* -50% = centré, -55% = décalé vers la gauche */
+      white-space: nowrap;
+      color: #8B4513;   /* marron */
+      font-size: 1.8rem; /* taille */
+    }
+
+    /* SIDEBAR SOUS LA NAVBAR */
+    .sidebar{
+      position:fixed;
+      top:var(--navbar-h);            /* <<< démarre sous la navbar */
+      left:0;
+      width:var(--sidebar-w);
+      height:calc(100vh - var(--navbar-h)); /* <<< occupe le reste de la hauteur */
+      background:var(--bcp-orange);
+      color:#fff;
+      padding:20px 15px;
+      box-shadow:2px 0 5px rgba(0,0,0,.08);
+      z-index:1020;
+    }
+    .sidebar .logo-wrapper{ text-align:center; margin-bottom:24px; }
+    .sidebar .logo-wrapper img{ height:100px; width:auto; }
+    .sidebar a{
+      display:block; color:#fff; text-decoration:none;
+      padding:10px; margin-bottom:10px; border-radius:8px; font-weight:500;
+      transition:background-color .2s;
+    }
+    .sidebar a:hover{ background:var(--bcp-orange-hover); }
+
+    /* CONTENU PRINCIPAL : À DROITE DE LA SIDEBAR, SOUS LA NAVBAR */
+    .main{
+      margin-left:var(--sidebar-w);
+      padding:24px;
+      padding-top:100px; /* navbar déjà décalée via positionnement de la sidebar */
+    }
+    /* ---- Navbar right: date + user ---- */
+    .navbar-meta {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .badge-ghost {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: #f8f9fb;
+      border: 1px solid #e6e8ef;
+      color: #6c757d;
+      font-size: .9rem;
+    }
+
+    .user-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      border: 1px solid #e6e8ef;
+      background: #fff;
+      box-shadow: 0 1px 2px rgba(16,24,40,.04);
+    }
+
+    .user-avatar {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: #f3f4f6;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: #6b7280;
+      font-size: .9rem;
+    }
+
+    /* petit ajustement mobile */
+    @media (max-width: 576px){
+      .navbar-meta { gap: 10px; }
+      .badge-ghost { display:none; } /* masque la date sur très petit écran */
+    }
+
+    /* Responsive simple */
+    @media (max-width: 991px){
+      .sidebar{ display:none; }
+      .main{ margin-left:0; }
+    }
+    .text-brown {
+  color: #8B4513; /* marron (tu peux changer la nuance si tu veux) */
+    margin-left: -80px; /* décale le texte à gauche */
+
+    }
+
+
+
+  </style>
+</head>
+<div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1100">
+  {% for message in messages %}
+    <div class="toast align-items-center text-bg-{{ message.tags }} border-0" role="alert" aria-live="assertive" aria-atomic="true">
+      <div class="d-flex">
+        <div class="toast-body">
+          {{ message }}
+        </div>
+        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+      </div>
+    </div>
+  {% endfor %}
+</div>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+    const toastElList = [].slice.call(document.querySelectorAll('.toast'))
+    toastElList.map(function(toastEl) {
+      const toast = new bootstrap.Toast(toastEl, { delay: 6000 }) // 6s
+      toast.show()
+    })
+  })
+</script>
+
+<body>
+
+  <!-- NAVBAR BLANCHE (PLEINE LARGEUR) -->
+  <nav class="navbar navbar-expand navbar-light navbar-custom">
+    <!-- Logo + titre -->
+    <a class="navbar-brand d-flex align-items-center gap-2" href="{% url 'users:home' %}">
+      <img src="{% static 'img/LogoWithoutBackground.png' %}" class="brand-logo" alt="BCP">
+    </a>
+    <div class="fw-bold nav-welcome">
+    Bienvenue dans le système de Développement RH
+    </div>
+
+    <div class="ms-auto navbar-meta">
+
+  <!-- Pastille "connecté le" -->
+  <span class="badge-ghost">
+    <i class="far fa-clock"></i>
+    Connecté le&nbsp;: {{ user.last_login|timezone:"Etc/GMT-1"|date:"d/m/Y H:i" }}
+  </span>
+
+  <!-- Dropdown utilisateur -->
+  <div class="dropdown">
+    <button class="user-btn dropdown-toggle" type="button" id="userDropdown"
+            data-bs-toggle="dropdown" aria-expanded="false">
+      <span class="user-avatar">
+        <i class="far fa-user"></i>
+      </span>
+      <span>Bonjour, {{ user.username|default:"Utilisateur" }}</span>
+    </button>
+    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+      <li class="px-3 py-2 small text-muted">
+        Connecté en tant que<br>
+        <strong>{{ user.get_full_name|default:user.username }}</strong>
+      </li>
+      <li><hr class="dropdown-divider"></li>
+      <li>
+        <form action="{% url 'users:logout' %}" method="post" class="px-3 mb-2">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-danger w-100">
+            <i class="fas fa-sign-out-alt me-2"></i> Se déconnecter
+          </button>
+        </form>
+      </li>
+    </ul>
+  </div>
+
+</div>
+
+  </nav>
+
+
+{% if messages %}
+  <div class="container mt-3">
+    {% for message in messages %}
+      <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fermer"></button>
+      </div>
+    {% endfor %}
+  </div>
+{% endif %}
+
+  <!-- SIDEBAR (SOUS LA NAVBAR) -->
+  <aside class="sidebar">
+    <div class="logo-wrapper">
+    </div>
+    <a href="{% url 'users:home' %}"><i class="fas fa-home me-2"></i> Accueil</a>
+    <a href="{% url 'agents:list' %}"><i class="fas fa-users me-2"></i> Agents</a>
+    <a href="{% url 'fonctions:list' %}"><i class="fas fa-briefcase me-2"></i> Fonctions</a>
+    <a href="{% url 'entites:list' %}"><i class="fas fa-building me-2"></i> Entités</a>
+    <a href="{% url 'affectations:list' %}"><i class="fas fa-random me-2"></i> Affectations</a>
+    <a href="{% url 'vivier:list' %}"><i class="fas fa-folder-tree me-2"></i> Vivier</a>
+    <a href="{% url 'annonces:list' %}"><i class="fas fa-bullhorn me-2"></i> Annonces</a>
+  </aside>
+
+  <!-- CONTENU -->
+  <main class="main">
+    {% block content %}{% endblock %}
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+  function updateDateTime() {
+    const now = new Date();
+    const options = {
+      weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
+      hour: '2-digit', minute: '2-digit', second: '2-digit'
+    };
+    document.getElementById('datetime').textContent = now.toLocaleDateString('fr-FR', options);
+  }
+  updateDateTime();
+  setInterval(updateDateTime, 1000); // mise à jour chaque seconde
+</script>
+
+</body>
+</html>

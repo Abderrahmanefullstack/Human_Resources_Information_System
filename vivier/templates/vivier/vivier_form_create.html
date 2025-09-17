@@ -1,0 +1,274 @@
+{% extends "base.html" %}
+{% block content %}
+
+<style>
+  :root{
+    --brand: #B23214;   /* rouge BCP */
+    --gold:  #e3b537;   /* doré BCP */
+    --ink:   #212529;
+    --bg-soft:#f8f9fa;
+  }
+
+  /* —— Carte premium —— */
+  .card-ultra {
+    border: 0; border-radius: 20px;
+    box-shadow: 0 20px 50px rgba(0,0,0,.10);
+    overflow: hidden;
+  }
+  .card-ultra .card-header {
+    position: relative; border: 0; color: #fff;
+    background: linear-gradient(120deg, var(--brand), var(--gold));
+  }
+  /* liseré animé très léger */
+  .card-ultra .card-header::after{
+    content:""; position:absolute; inset:0;
+    background: radial-gradient(1200px 1200px at 0% 0%, rgba(255,255,255,.12), transparent 40%);
+    animation: glow 6s infinite alternate ease-in-out;
+    pointer-events:none;
+  }
+  @keyframes glow{ from{opacity:.4} to{opacity:.8} }
+
+  .title-strong{ font-weight:800; letter-spacing:.2px; }
+  .badge-ghost{ background:rgba(255,255,255,.2); border:1px solid rgba(255,255,255,.35); }
+
+  /* —— Sections —— */
+  .section { border:1px solid #eee; border-radius:16px; padding:1.25rem; }
+  .section + .section { margin-top:1rem; }
+  .section-title{ color:var(--brand); font-weight:700; font-size:.98rem; margin-bottom:.25rem; }
+  .section-sub{ color:#6c757d; font-size:.86rem; margin-bottom:.9rem; }
+
+  /* —— Champs & focus —— */
+  .input-group-text{ background:var(--bg-soft); }
+  .form-control:focus, .form-select:focus {
+    border-color: var(--brand) !important;
+    box-shadow: 0 0 0 .25rem rgba(178,50,20,.12) !important;
+  }
+  .req{ color:#dc3545; margin-left:.15rem; }
+  .help{ font-size:.8rem; color:#6c757d; }
+
+  /* —— Aperçu latéral (verre dépoli) —— */
+  .glass {
+    backdrop-filter: blur(6px);
+    background: linear-gradient(180deg, rgba(255,255,255,.7), rgba(255,255,255,.5));
+    border:1px solid rgba(0,0,0,.06);
+    border-radius:16px;
+  }
+
+  /* —— Footer collant —— */
+  .sticky-actions{
+    position: sticky; bottom:0; z-index: 10;
+    background:#fff; border-top:1px solid #eee;
+  }
+
+  /* Bouton primaire “marque” */
+  .btn-brand{ background:var(--brand); border-color:var(--brand); }
+  .btn-brand:hover{ background:#9c2910; border-color:#9c2910; }
+</style>
+
+<div class="card card-ultra">
+  <!-- HEADER -->
+  <div class="card-header p-3">
+    <div class="d-flex align-items-center justify-content-between">
+      <div>
+        <div class="h4 mb-1 title-strong"><i class="fas fa-layer-group me-2"></i>Créer un Vivier</div>
+        <div class="small opacity-75">Renseignez les informations principales. L’aperçu se met à jour en direct.</div>
+      </div>
+      <span class="badge badge-ghost">Nouveau</span>
+    </div>
+  </div>
+
+  <form method="post" novalidate id="vivierCreateForm">
+    {% csrf_token %}
+
+    <div class="card-body">
+      {% if form.non_field_errors %}
+        <div class="alert alert-danger mb-3">{{ form.non_field_errors }}</div>
+      {% endif %}
+
+      <div class="row g-4">
+        <!-- ==== Colonne Formulaire ==== -->
+        <div class="col-lg-8">
+          <div class="section">
+            <div class="section-title">Informations principales</div>
+            <div class="section-sub">Numéro, date de création, fonction cible, direction / réseau</div>
+
+            <div class="row g-4">
+              <!-- N° vivier -->
+              <div class="col-12 col-md-4">
+                <label class="form-label mb-1" data-bs-toggle="tooltip" title="Format : NNN/AAAA (ex. 008/2025)">
+                  {{ form.NumCommission.label }}{% if form.NumCommission.field.required %}<span class="req">*</span>{% endif %}
+                </label>
+                <div class="input-group">
+                  <span class="input-group-text"><i class="fas fa-hashtag"></i></span>
+                  {{ form.NumCommission }}
+                </div>
+                <div class="help mt-1">Exemple : <code>008/2025</code></div>
+                {% if form.NumCommission.errors %}<div class="text-danger small mt-1">{{ form.NumCommission.errors }}</div>{% endif %}
+              </div>
+
+              <!-- Date -->
+              <div class="col-12 col-md-4">
+                <label class="form-label mb-1">
+                  {{ form.DateCreation.label }}{% if form.DateCreation.field.required %}<span class="req">*</span>{% endif %}
+                </label>
+                <div class="input-group">
+                  <span class="input-group-text"><i class="far fa-calendar"></i></span>
+                  {{ form.DateCreation }}
+                </div>
+                {% if form.DateCreation.errors %}<div class="text-danger small mt-1">{{ form.DateCreation.errors }}</div>{% endif %}
+              </div>
+
+              <!-- Fonction cible -->
+              <div class="col-12 col-md-4">
+                <label class="form-label mb-1">
+                  {{ form.FonctionCible.label }}{% if form.FonctionCible.field.required %}<span class="req">*</span>{% endif %}
+                </label>
+                <div class="input-group">
+                  <span class="input-group-text"><i class="fas fa-briefcase"></i></span>
+                  {{ form.FonctionCible }}
+                </div>
+                {% if form.FonctionCible.errors %}<div class="text-danger small mt-1">{{ form.FonctionCible.errors }}</div>{% endif %}
+              </div>
+
+              <!-- Direction / Réseau -->
+              <div class="col-12 col-md-6">
+                <label class="form-label mb-1">
+                  {{ form.DirectionReseau.label }}{% if form.DirectionReseau.field.required %}<span class="req">*</span>{% endif %}
+                </label>
+                <div class="input-group">
+                  <span class="input-group-text"><i class="fas fa-sitemap"></i></span>
+                  {{ form.DirectionReseau }}
+                </div>
+                {% if form.DirectionReseau.errors %}<div class="text-danger small mt-1">{{ form.DirectionReseau.errors }}</div>{% endif %}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ==== Colonne Aperçu ==== -->
+        <div class="col-lg-4">
+          <div class="glass p-3 h-100">
+            <div class="d-flex align-items-center justify-content-between mb-2">
+              <div class="fw-bold"><i class="fas fa-eye me-2"></i>Aperçu</div>
+              <span class="badge bg-light text-dark">Live</span>
+            </div>
+            <div class="small text-muted mb-2">Vérifiez vos infos avant d’enregistrer :</div>
+
+            <ul class="list-group list-group-flush">
+              <li class="list-group-item px-0 d-flex justify-content-between">
+                <span class="text-muted">N° vivier</span>
+                <span class="fw-semibold" id="pv-num">—</span>
+              </li>
+              <li class="list-group-item px-0 d-flex justify-content-between">
+                <span class="text-muted">Date</span>
+                <span class="fw-semibold" id="pv-date">—</span>
+              </li>
+              <li class="list-group-item px-0 d-flex justify-content-between">
+                <span class="text-muted">Fonction cible</span>
+                <span class="fw-semibold text-truncate" id="pv-fonc" style="max-width:60%;">—</span>
+              </li>
+              <li class="list-group-item px-0 d-flex justify-content-between">
+                <span class="text-muted">Direction / Réseau</span>
+                <span class="fw-semibold text-truncate" id="pv-dir" style="max-width:60%;">—</span>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div><!-- /row -->
+    </div><!-- /card-body -->
+
+    <!-- ACTIONS -->
+    <div class="card-footer sticky-actions py-3 px-3">
+      <div class="d-flex justify-content-between align-items-center">
+        <a href="{% url 'vivier:list' %}" class="btn btn-outline-secondary">
+          <i class="fas fa-arrow-left me-1"></i> Annuler
+        </a>
+        <button class="btn btn-brand" id="submitBtn">
+          <span class="spinner-border spinner-border-sm me-2 d-none" id="btnSpinner"></span>
+          <i class="fas fa-save me-1"></i> Enregistrer
+        </button>
+      </div>
+    </div>
+  </form>
+</div>
+
+<script>
+  // —— Activer tooltips Bootstrap (si bundle déjà inclus dans base.html)
+  if (window.bootstrap) {
+    document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(el => new bootstrap.Tooltip(el));
+  }
+
+  // —— Forcer classes Bootstrap si widgets ne les ont pas
+  document.querySelectorAll('select').forEach(el => el.classList.add('form-select'));
+  document.querySelectorAll('input:not([type="checkbox"]):not([type="radio"])')
+    .forEach(el => el.classList.add('form-control'));
+
+  // —— Références
+  const numEl  = document.querySelector('[name="NumCommission"]');
+  const dateEl = document.querySelector('[name="DateCreation"]');
+  const foncEl = document.querySelector('[name="FonctionCible"]');
+  const dirEl  = document.querySelector('[name="DirectionReseau"]');
+
+  const pvNum  = document.getElementById('pv-num');
+  const pvDate = document.getElementById('pv-date');
+  const pvFonc = document.getElementById('pv-fonc');
+  const pvDir  = document.getElementById('pv-dir');
+
+  // —— Helpers
+  const pad = n => String(n).padStart(2,'0');
+  const todayISO = () => {
+    const d = new Date(); return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+  };
+  const formatDateFR = v => {
+    if (!v) return '—';
+    const [y,m,d] = v.split('-'); return `${d}/${m}/${y}`;
+  };
+
+  // —— Valeurs par défaut
+  if (dateEl && (!dateEl.type || dateEl.type !== 'date')) dateEl.setAttribute('type','date');
+  if (dateEl && !dateEl.value) dateEl.value = todayISO();
+  if (numEl) numEl.placeholder = '008/2025';
+
+  // —— Masque NNN/AAAA + auto-pad
+  if (numEl) {
+    numEl.setAttribute('maxlength','9');
+    numEl.setAttribute('pattern','^\\d{3}/\\d{4}$');
+
+    numEl.addEventListener('input', () => {
+      let v = numEl.value.replace(/[^\d]/g,'');
+      if (v.length > 3) v = v.slice(0,3) + '/' + v.slice(3);
+      numEl.value = v.slice(0,8);
+      pvNum.textContent = numEl.value || '—';
+    });
+    numEl.addEventListener('blur', () => {
+      let m = numEl.value.trim(); if (!m) return;
+      let [n,y] = m.split('/');
+      n = (n||'').replace(/\D/g,'').padStart(3,'0').slice(0,3);
+      y = (y||String(new Date().getFullYear())).replace(/\D/g,'').slice(0,4);
+      numEl.value = `${n}/${y}`; pvNum.textContent = numEl.value;
+    });
+  }
+
+  // —— Live preview
+  const updatePreview = () => {
+    pvNum.textContent  = (numEl && numEl.value) ? numEl.value : '—';
+    pvDate.textContent = (dateEl && dateEl.value) ? formatDateFR(dateEl.value) : '—';
+    pvFonc.textContent = (foncEl && (foncEl.selectedOptions[0]?.text || foncEl.value)) || '—';
+    pvDir.textContent  = (dirEl && (dirEl.selectedOptions[0]?.text || dirEl.value)) || '—';
+  };
+  [numEl, dateEl, foncEl, dirEl].forEach(el => el && el.addEventListener('input', updatePreview));
+  [dateEl, foncEl, dirEl].forEach(el => el && el.addEventListener('change', updatePreview));
+  updatePreview();
+
+  // —— Anti double-submit + feedback spinner
+  const form = document.getElementById('vivierCreateForm');
+  const btn  = document.getElementById('submitBtn');
+  const spn  = document.getElementById('btnSpinner');
+
+  form.addEventListener('submit', () => {
+    btn.disabled = true; spn.classList.remove('d-none');
+    // Laisse le submit aller au serveur
+  });
+</script>
+
+{% endblock %}

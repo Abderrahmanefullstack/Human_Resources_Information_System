@@ -1,0 +1,169 @@
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+<div class="container mt-4">
+
+  <!-- Titre -->
+  <div class="affx-hero d-flex justify-content-between align-items-center">
+    <div>
+      <div class="title h5 mb-1">Saisie des nouvelles informations</div>
+      <div class="subtitle">Renseignez les champs nécessaires puis enregistrez</div>
+    </div>
+    {% if progress %}
+      <span class="badge rounded-pill bg-dark-subtle text-dark px-3 py-2">
+        Agent {{ progress.current }} / {{ progress.total }}
+      </span>
+    {% endif %}
+  </div>
+
+  {% if progress %}
+    <div class="affx-muted mb-2">Traitement en série — agent {{ progress.current }} sur {{ progress.total }}</div>
+  {% endif %}
+
+  <form method="post" class="affx-card p-3">
+    {% csrf_token %}
+    <div class="row g-3">
+      <div class="col-md-3 affx-field">
+        <label class="form-label">Date mobilité</label>
+        {{ form.DateMobilite }}
+      </div>
+      <div class="col-md-3 affx-field">
+        <label class="form-label">Date lettre</label>
+        {{ form.DateLettreAffectation }}
+      </div>
+    </div>
+
+    {# --- Partie NOUVELLE – Fonction --- #}
+    {% if type_aff == 'FONCTION' or type_aff == 'LES_DEUX' %}
+      <div class="affx-card p-3 mt-3">
+        <div class="h6 mb-3">Partie NOUVELLE – Fonction</div>
+        <div class="row g-3">
+          <div class="col-md-3 affx-field">
+            <label class="form-label">Code</label>
+            {{ form.CodeFonctionNouveau }}
+          </div>
+          <div class="col-md-5 affx-field">
+            <label class="form-label">Libellé</label>
+            {{ form.LibelleFonctionNouveau }}
+          </div>
+        </div>
+      </div>
+    {% endif %}
+
+    {# --- Partie NOUVELLE – Agence --- #}
+    {% with at=type_aff|default:'AGENCE' %}
+      {% if at == 'AGENCE' or at == 'LES_DEUX' %}
+        <div class="affx-card p-3 mt-3">
+          <div class="h6 mb-3">Partie NOUVELLE – Agence</div>
+          <div class="row g-3">
+            <div class="col-md-3 affx-field">
+              <label class="form-label">Code</label>
+              {{ form.CodeEntiteNouveau }}
+            </div>
+            <div class="col-md-5 affx-field">
+              <label class="form-label">Libellé</label>
+              {{ form.LibelleEntiteNouveau }}
+            </div>
+          </div>
+          {# données minimales des entités pour JS #}
+          {{ entites_min|json_script:"entites-data" }}
+        </div>
+      {% endif %}
+    {% endwith %}
+
+    <div class="text-end mt-3">
+      <a href="{% url 'affectations:step1' %}" class="btn affx-btn-outline">Retour</a>
+      <button class="btn affx-btn">Enregistrer</button>
+    </div>
+  </form>
+</div>
+
+{# JS: transforme si besoin les champs en <select> + synchronise Code/Libellé #}
+<script>
+(function () {
+  // Si la section Agence est affichée
+  const entitesScript = document.getElementById("entites-data");
+  if (!entitesScript) return;
+
+  const ENTITES = JSON.parse(entitesScript.textContent || "[]");
+
+  // Récupérer les champs (peuvent être <input> si la Form n'a pas encore des Select)
+  let codeEl = document.getElementById("id_CodeEntiteNouveau");
+  let libEl  = document.getElementById("id_LibelleEntiteNouveau");
+  if (!codeEl || !libEl) return;
+
+  // Si ce ne sont pas des <select>, on remplace proprement par des <select>
+  function ensureSelect(inputEl) {
+    if (inputEl.tagName === "SELECT") return inputEl;
+    const sel = document.createElement("select");
+    sel.id = inputEl.id;
+    sel.name = inputEl.name;
+    sel.className = inputEl.className || "form-select";
+    // garder valeur éventuelle
+    const v = inputEl.value || "";
+    inputEl.replaceWith(sel);
+    // option vide
+    const empty = document.createElement("option");
+    empty.value = "";
+    empty.textContent = "";
+    sel.appendChild(empty);
+    if (v) sel.value = v;
+    return sel;
+  }
+
+  codeEl = ensureSelect(codeEl);
+  libEl  = ensureSelect(libEl);
+
+  // Maps rapides
+  const byCode = new Map();
+  const byLib  = new Map();
+  ENTITES.forEach(e => {
+    const code = String(e.AffectationCode ?? "");
+    const lib  = String(e.AffectationLibelle ?? "");
+    if (!byCode.has(code)) byCode.set(code, lib);
+    if (!byLib.has(lib))   byLib.set(lib, code);
+  });
+
+  // Remplissage options si vide
+  function fillOptions(selectEl, values, getValue, getLabel) {
+    // si déjà rempli (plus d'1 option réelle), ne pas dupliquer
+    const realOpts = Array.from(selectEl.options).filter(o => o.value !== "");
+    if (realOpts.length > 1) return;
+    values.forEach(v => {
+      const opt = document.createElement("option");
+      opt.value = getValue(v);
+      opt.textContent = getLabel(v);
+      selectEl.appendChild(opt);
+    });
+  }
+
+  fillOptions(codeEl, ENTITES,
+    e => String(e.AffectationCode ?? ""),
+    e => String(e.AffectationCode ?? "")
+  );
+  fillOptions(libEl, ENTITES,
+    e => String(e.AffectationLibelle ?? ""),
+    e => String(e.AffectationLibelle ?? "")
+  );
+
+  // Sync Code -> Libellé
+  codeEl.addEventListener("change", () => {
+    const lib = byCode.get(codeEl.value) || "";
+    if (lib) libEl.value = lib;
+  });
+
+  // Sync Libellé -> Code
+  libEl.addEventListener("change", () => {
+    const code = byLib.get(libEl.value) || "";
+    if (code) codeEl.value = code;
+  });
+
+  // Harmoniser si une valeur est déjà posée côté serveur
+  if (codeEl.value && byCode.get(codeEl.value)) {
+    libEl.value = byCode.get(codeEl.value);
+  } else if (libEl.value && byLib.get(libEl.value)) {
+    codeEl.value = byLib.get(libEl.value);
+  }
+})();
+</script>
+{% endblock %}

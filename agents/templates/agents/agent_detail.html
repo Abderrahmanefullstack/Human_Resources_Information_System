@@ -1,0 +1,121 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="card shadow-lg">
+        <!-- En-tête avec boutons d'action -->
+        <div class="card-header bg-primary text-white">
+            <div class="d-flex justify-content-between align-items-center">
+                <h2 class="mb-0">
+                    <i class="fas fa-id-card me-2"></i>Fiche Agent
+                </h2>
+                <div>
+                    <a href="{% url 'agents:edit' agent.Matricule %}" class="btn btn-warning btn-sm">
+                        <i class="fas fa-edit me-1"></i> Modifier
+                    </a>
+                    <a href="{% url 'agents:list' %}" class="btn btn-light btn-sm ms-2">
+                        <i class="fas fa-arrow-left me-1"></i> Retour
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Corps -->
+        <div class="card-body">
+            <div class="row">
+                <!-- Infos principales -->
+                <div class="col-md-8">
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-hover">
+                            <tbody>
+                                <tr>
+                                    <th class="bg-light">Matricule</th>
+                                    <td>{{ agent.Matricule|default:"-" }}</td>
+                                </tr>
+                                <tr>
+                                    <th class="bg-light">Nom complet</th>
+                                    <td>{{ agent.Civilite|default:"" }} {{ agent.Nom|default:"" }} {{ agent.Prenom|default:"" }}</td>
+                                </tr>
+                                <tr>
+                                    <th class="bg-light">Date d'entrée</th>
+                                    <td>{{ agent.DateEntree|date:"d/m/Y"|default:"-" }}</td>
+                                </tr>
+                                <tr>
+                                    <th class="bg-light">N° CNSS</th>
+                                    <td>{{ agent.NoAffiliationCNSS|default:"-" }}</td>
+                                </tr>
+                                <tr>
+                                    <th class="bg-light">Situation</th>
+                                    <td>{{ agent.SituationEffectifLibelle|default:"-" }}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Bloc affectation -->
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="card-header bg-info text-white">
+                            <i class="fas fa-building me-2"></i>Affectation
+                        </div>
+                        <ul class="list-group list-group-flush">
+                            <li class="list-group-item"><strong>Code :</strong> {{ agent.AffectationCode|default:"-" }}</li>
+                            <li class="list-group-item"><strong>Libellé :</strong> {{ agent.AffectationLibelle|default:"-" }}</li>
+                            <li class="list-group-item"><strong>Arborescence :</strong> <span class="d-block text-muted small mt-1">{{ agent.ArborescenceAffectation|truncatechars:60|default:"-" }}</span></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Accordéon : détails complémentaires -->
+            <div class="mt-4">
+                <div class="accordion" id="agentDetails">
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#additionalData">
+                                <i class="fas fa-ellipsis-h me-2"></i>Détails complémentaires
+                            </button>
+                        </h2>
+                        <div id="additionalData" class="accordion-collapse collapse" data-bs-parent="#agentDetails">
+                            <div class="accordion-body">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <p><strong>Champ 1 :</strong> Valeur 1</p>
+                                        <p><strong>Champ 2 :</strong> Valeur 2</p>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <p><strong>Champ 3 :</strong> Valeur 3</p>
+                                        <p><strong>Champ 4 :</strong> Valeur 4</p>
+                                    </div>
+                                    <!-- Tu peux remplacer ces blocs par les vrais champs du modèle -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="card-footer text-muted">
+            <small>
+                Dernière mise à jour : {% now "d/m/Y à H:i" %}
+                {% if agent.modified_date %}
+                    (Modifié le {{ agent.modified_date|date:"d/m/Y à H:i" }})
+                {% endif %}
+            </small>
+        </div>
+    </div>
+</div>
+
+<style>
+    .card { border-radius: 10px; }
+    .card-header { border-radius: 10px 10px 0 0 !important; }
+    th { white-space: nowrap; }
+    .accordion-button:not(.collapsed) {
+        background-color: rgba(13, 110, 253, 0.1);
+    }
+</style>
+{% endblock %}

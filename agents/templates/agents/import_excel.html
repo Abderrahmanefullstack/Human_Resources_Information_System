@@ -1,0 +1,16 @@
+<h2>Importer un fichier Excel</h2>
+
+<form method="POST" enctype="multipart/form-data" onsubmit="return confirmImport();">
+    {% csrf_token %}
+    <div>
+        <label for="excel_file">Choisir le fichier Excel :</label>
+        <input type="file" name="excel_file" accept=".xlsx" required>
+    </div>
+    <button type="submit" class="btn btn-danger mt-3">⚠️ Importer (cela va écraser les données existantes)</button>
+</form>
+
+<script>
+function confirmImport() {
+    return confirm("⚠️ ATTENTION : Cette action va supprimer tous les agents existants et les remplacer par ceux du fichier Excel.\n\nSouhaitez-vous vraiment continuer ?");
+}
+</script>

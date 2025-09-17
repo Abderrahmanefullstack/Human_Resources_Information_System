@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>{{ pdf_title }}</title>
+  <style>
+    body { font-family: DejaVu Sans, Arial, sans-serif; font-size: 11px; }
+    h1 { font-size: 18px; text-align:center; margin: 0 0 8px; }
+    h2 { font-size: 13px; margin: 12px 0 6px; }
+    table { width:100%; border-collapse: collapse; }
+    th, td { border: 1px solid #999; padding: 5px; }
+    th { background: #eee; }
+    .small { font-size: 10px; color:#555; }
+  </style>
+</head>
+<body>
+  <h1>PV Comité Développement RH</h1>
+  <div class="small">Vivier {{ v.NumCommission }} — Fonction cible : {{ v.FonctionCible }} — Date : {{ v.DateCreation|date:"d/m/Y" }}</div>
+
+  <h2>Liste des agents (Trajectoire : Non)</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Matricule</th><th>Nom</th><th>Prénom</th>
+        <th>Fonction</th><th>Affectation</th><th>Réseau</th>
+        <th>Sanction</th><th>PI n-1</th><th>PI n-2</th><th>PI n-3</th>
+        <th>Avis</th><th>Note</th><th>Décision</th><th>Motif</th><th>Caractère</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for r in rows %}
+      <tr>
+        <td>{{ r.matricule }}</td>
+        <td>{{ r.nom }}</td>
+        <td>{{ r.prenom }}</td>
+        <td>{{ r.fonction }}</td>
+        <td>{{ r.affectation_code }} — {{ r.affectation_libelle }}</td>
+        <td>{{ r.reseau }}</td>
+        <td>{{ r.sanction }}</td>
+        <td>{{ r.pi_n1 }}</td>
+        <td>{{ r.pi_n2 }}</td>
+        <td>{{ r.pi_n3 }}</td>
+        <td>{{ r.avis }}</td>
+        <td>{{ r.note }}</td>
+        <td>{{ r.decision }}</td>
+        <td>{{ r.motif }}</td>
+        <td>{{ r.caractere }}</td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="15">Aucun agent avec trajectoire = Non.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <div style="margin-top:30px;">
+    <div>Signature(s) :</div>
+    <div style="height:80px;border:1px dashed #ccc;"></div>
+  </div>
+</body>
+</html>

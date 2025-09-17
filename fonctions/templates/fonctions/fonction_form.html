@@ -1,0 +1,10 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>{% if edit %}Modifier{% else %}Créer{% endif %} une Fonction</h2>
+<form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit" class="btn btn-primary">💾 Enregistrer</button>
+    <a href="{% url 'fonctions:list' %}" class="btn btn-secondary">Annuler</a>
+</form>
+{% endblock %}

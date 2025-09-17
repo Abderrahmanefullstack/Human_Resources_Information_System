@@ -1,0 +1,182 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Affectations</h2><br><br><br>
+<style>
+  .table-vivier thead th{
+    background-color:#B23214 !important;
+    color:#fff !important;
+    border-color:#B23214 !important;
+    vertical-align: middle;
+  }
+  /* tes styles existants */
+  .affx-hero .title{font-weight:700}
+  .affx-hero .subtitle{opacity:.8}
+  .affx-btn{background:#ff9900;color:#fff;border:none}
+  .affx-btn:hover{opacity:.9;color:#fff}
+  .affx-btn-outline{border:1px solid #ff9900;color:#ff9900;background:#fff}
+  .affx-btn-outline:hover{background:#ff9900;color:#fff}
+  .affx-card{background:#fff;border-radius:10px;border:1px solid #eee;box-shadow:0 4px 16px rgba(0,0,0,.04)}
+  .affx-table thead th{background:#fafafa}
+
+  /* ajout pour layout plein écran + scroll */
+  .min-h-0 { min-height: 0; }
+  .table-wrap { flex-grow: 1; overflow: auto; }
+  .affx-table thead th { position: sticky; top: 0; z-index: 1; }
+
+    .btn-sky {
+    background: #2361ddff;          /* bleu ciel */
+    border-color: #2361ddff;
+    color: #fff;
+  }
+  .btn-sky:hover { 
+    background: #d29a32ff; 
+    border-color: #d29a32ff; 
+    color: #fff; 
+  }
+</style>
+<div class="row g-2 align-items-end mt-3">
+  <div class="col-12 col-md-8 col-lg-6">
+    <form method="get" class="row g-2">
+      <div class="col-12 col-sm-8">
+        <input type="text" name="q" class="form-control"
+               placeholder="🔍 Rechercher (N° affectation ou matricule)"
+               value="{{ q|default:'' }}">
+      </div>
+      <div class="col-12 col-sm-4 d-flex gap-2">
+        <button class="btn btn-primary">Rechercher</button>
+        {% if q %}
+          <a href="{% url 'affectations:list' %}" class="btn affx-btn-outline w-100">Réinitialiser</a>
+        {% endif %}
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="container-fluid px-3 py-3 d-flex flex-column" style="min-height: 75vh;">
+
+  <!-- Titre + sous-titre -->
+  <div class="affx-hero d-flex justify-content-between align-items-center">
+    <div>
+      <div class="title h4 mb-1"><i ></i></div>
+      <div class="subtitle"></div>
+    </div>
+    <!-- Boutons CRUD alignés à droite -->
+<div class="d-flex gap-2">
+  <!-- 1) Bleu ciel -->
+  <a href="{% url 'affectations:start' %}" class="btn btn-success">
+    <i class="fas fa-plus me-2"></i>Ajouter
+  </a>
+
+  <!-- 2) Vert -->
+  <button class="btn btn-info" id="btn-see">
+    <i class="fas fa-eye me-2"></i>Afficher
+  </button>
+
+  <!-- 3) Rouge -->
+  <button class="btn btn-danger" id="btn-del">
+    <i class="fas fa-trash me-2"></i>Supprimer
+  </button>
+</div>
+  </div>
+
+  <!-- Filtre -->
+  
+
+  <!-- Tableau qui prend l'espace disponible -->
+  <form id="affectation-form" method="get" class="d-flex flex-column flex-grow-1 min-h-0">
+    <div class="affx-card mt-3 p-0 table-wrap">
+      <div class="table-responsive">
+        <table class="table table-sm table-hover align-middle table-vivier">
+          <thead>
+            <tr>
+              <th style="width:36px;"></th>
+              <th>N° Affectation</th>
+              <th>Date Lettre</th>
+              <th>Matricule</th>
+              <th>Civilité</th>
+              <th>Nom</th>
+              <th>Prénom</th>
+              <th>Date Naissance</th>
+              <th>Changements</th>
+              <th>Fonction Récente (Code)</th>
+              <th>Fonction Récente (Libellé)</th>
+              <th>Entite Récente (Code)</th>
+              <th>Entite Récente (Libellé)</th>
+              <th>Lieu de Fonction (Arborescence)</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for a in affectations %}
+            <tr>
+              <td class="text-center">
+                <input type="radio" name="selected" value="{{ a.NumeroAffectation }}">
+              </td>
+
+              <td class="fw-semibold">
+                <a href="{% url 'affectations:detail' a.NumeroAffectation %}">
+                  {{ a.NumeroAffectation }}
+                </a>
+              </td>
+
+              <td>{{ a.DateLettreAffectation|date:"d/m/Y" }}</td>
+              <td>{{ a.Matricule }}</td>
+              <td>{{ a.Civilite }}</td>
+              <td>{{ a.Nom }}</td>
+              <td>{{ a.Prenom }}</td>
+              <td>{{ a.DateNaissance|date:"d/m/Y" }}</td>
+
+              <td>
+                <label class="me-3">
+                  <input type="checkbox" disabled {% if a.ChangementAffectation %}checked{% endif %}>
+                  Entite
+                </label>
+                <label>
+                  <input type="checkbox" disabled {% if a.ChangementFonction %}checked{% endif %}>
+                  Fonction
+                </label>
+              </td>
+
+              <td>{{ a.FonctionRecenteCode }}</td>
+              <td>{{ a.FonctionRecenteLibelle }}</td>
+              <td>{{ a.AffectationRecenteCode }}</td>
+              <td>{{ a.AffectationRecenteLibelle }}</td>
+
+              <td class="text-truncate" style="max-width:420px" title="{{ a.LieuFonction }}">
+                {{ a.LieuFonction }}
+              </td>
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="14" class="text-center py-4 text-muted">
+                Aucune affectation pour le moment.
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </form>
+
+</div>
+
+<script>
+  const getSel = () => document.querySelector('input[name="selected"]:checked')?.value;
+
+  // Voir détail
+  document.getElementById('btn-see').onclick = (e) => {
+    e.preventDefault();
+    const pk = getSel();
+    if (!pk) { alert("Sélectionnez une affectation."); return; }
+    window.location.href = "{% url 'affectations:detail' pk='__X__' %}".replace('__X__', pk);
+  };
+
+  // Supprimer
+  document.getElementById('btn-del').onclick = (e) => {
+    const pk = getSel();
+    if (!pk) { e.preventDefault(); alert("Sélectionnez une affectation."); return; }
+    if (!confirm("Supprimer l’affectation " + pk + " ?")) { e.preventDefault(); return; }
+    window.location.href = "{% url 'affectations:delete' %}?selected=" + encodeURIComponent(pk);
+  };
+</script>
+{% endblock %}

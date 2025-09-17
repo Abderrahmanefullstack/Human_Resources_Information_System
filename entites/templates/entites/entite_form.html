@@ -1,0 +1,131 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<style>
+    /* 🎨 Gradient animé */
+    body {
+        background: linear-gradient(-45deg, #ec7000, #f0f0f0, #0078a0, #ffffff);
+        background-size: 400% 400%;
+        animation: gradientBG 12s ease infinite;
+    }
+
+    @keyframes gradientBG {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
+    }
+
+    .glass-card {
+        background: rgba(255, 255, 255, 0.82);
+        backdrop-filter: blur(12px);
+        border-radius: 1.5rem;
+        padding: 2.5rem;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+    }
+
+    .form-title {
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: #ec7000;
+        margin-bottom: 1.5rem;
+    }
+
+    .form-label {
+        font-weight: 600;
+        color: #333;
+    }
+
+    .form-control {
+        border-radius: 0.75rem;
+        border: 1px solid #ced4da;
+        padding: 0.75rem 1rem;
+        background-color: #fff;
+        transition: all 0.3s ease-in-out;
+    }
+
+    .form-control:focus {
+        border-color: #ec7000;
+        box-shadow: 0 0 0 0.2rem rgba(236, 112, 0, 0.25);
+    }
+
+    .btn-orange {
+        background-color: #ec7000;
+        color: #fff;
+        border: none;
+        border-radius: 0.75rem;
+        padding: 0.6rem 1.5rem;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+
+    .btn-orange:hover {
+        background-color: #c95e00;
+        transform: scale(1.02);
+    }
+
+    .btn-outline-secondary {
+        border-radius: 0.75rem;
+    }
+
+    .icon-circle {
+        background-color: #ec7000;
+        color: white;
+        border-radius: 50%;
+        padding: 0.6rem;
+        margin-right: 0.5rem;
+        font-size: 1.2rem;
+    }
+
+    .fade-in {
+        animation: fadeIn 1s ease-in-out;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+</style>
+
+<div class="container d-flex justify-content-center align-items-center mt-5 fade-in">
+    <div class="glass-card w-100" style="max-width: 700px;">
+        <div class="d-flex align-items-center mb-4">
+            <div class="icon-circle">
+                <i class="fas fa-building"></i>
+            </div>
+            <h2 class="form-title">
+                {% if form.instance.pk %}
+                    Modifier une entité
+                {% else %}
+                    Nouvelle entité
+                {% endif %}
+            </h2>
+        </div>
+
+        <form method="post" novalidate>
+            {% csrf_token %}
+            {% for field in form.visible_fields %}
+                <div class="mb-4">
+                    <label class="form-label">{{ field.label }}</label>
+                    {{ field }}
+                    {% if field.errors %}
+                        <div class="text-danger small mt-1">
+                            {{ field.errors|striptags }}
+                        </div>
+                    {% endif %}
+                </div>
+            {% endfor %}
+
+            <div class="d-flex justify-content-end">
+                <a href="{% url 'entites:list' %}" class="btn btn-outline-secondary me-3">
+                    <i class="fas fa-arrow-left"></i> Annuler
+                </a>
+                <button type="submit" class="btn btn-orange">
+                    <i class="fas fa-check"></i>
+                    {% if form.instance.pk %} Enregistrer {% else %} Créer {% endif %}
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

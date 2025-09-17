@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container py-4">
+  <h4>Exporter — Affectation {{ a.NumeroAffectation }}</h4>
+  <p>Choisissez le format :</p>
+  <div class="list-group" style="max-width:520px">
+    {% for o in options %}
+      <a class="list-group-item list-group-item-action"
+         href="{% url 'affectations:pdf' pk=a.pk %}?type={{ o.key }}"
+         target="_blank">{{ o.label }}</a>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

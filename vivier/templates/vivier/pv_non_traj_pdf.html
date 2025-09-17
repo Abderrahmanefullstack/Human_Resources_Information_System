@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>PV Comité Développement RH — {{ v.NumCommission }}</title>
+<style>
+  @page { size: A4; margin: 12mm; }
+  body { font-family: DejaVu Sans, Helvetica, Arial, sans-serif; font-size:10pt; color:#111; }
+  table.header { width:100%; border-bottom:1.2pt solid #000; margin-bottom:6pt; border-collapse:collapse; }
+  table.header td { font-size:9.5pt; color:#222; padding:2pt 0; }
+  .left { text-align:left; font-weight:bold; }
+  .right { text-align:right; }
+  .title-wrap { margin:6pt 0 10pt 0; }
+  .title-outer { border:1.2pt solid #000; padding:2pt; }
+  .title-inner { border:1.2pt solid #000; padding:6pt; text-align:center; font-size:13.5pt; font-weight:bold; }
+  .subtitle { margin:4pt 0 10pt 0; font-size:10pt; color:#333; }
+  table.grid { width:100%; border-collapse:collapse; table-layout:fixed; }
+  table.grid th, table.grid td { border:1.1pt solid #000; padding:4pt; vertical-align:top; }
+  table.grid th { background:#eee; font-weight:bold; }
+  .w-mat { width:12%; } .w-np{ width:20%; } .w-fn{ width:19%; } .w-af{ width:25%; }
+  .w-rs { width:12%; } .w-av{ width:20%; } .w-dc{ width:10%; } .w-nt{ width:6%; }
+  .nowrap { white-space:nowrap; }
+  .footer { margin-top:10pt; font-size:9pt; color:#444; }
+  .signs { margin-top:12pt; width:100%; border-collapse:collapse; }
+  .signs td { vertical-align:top; padding:6pt; }
+  .sign-box { border:1pt solid #000; height:70px; }
+  .center { text-align:center; }
+</style>
+</head>
+<body>
+
+  <table class="header">
+    <tr>
+      <td class="left">Banque Populaire de Tanger Tétouan</td>
+      <td class="right">{% if v.DateCreation %}{{ v.DateCreation|date:"d/m/Y" }}{% endif %}</td>
+    </tr>
+  </table>
+
+  <div class="title-wrap">
+    <div class="title-outer"><div class="title-inner">
+      PV COMITÉ DÉVELOPPEMENT RH — {{ v.NumCommission }}
+    </div></div>
+  </div>
+
+  <div class="subtitle">
+    Fonction cible : {{ v.FonctionCible }}{% if v.DirectionReseau %} &nbsp;&nbsp;|&nbsp;&nbsp; Direction / Réseau : {{ v.DirectionReseau }}{% endif %}
+  </div>
+
+  <table class="grid">
+    <thead>
+      <tr>
+        <th class="nowrap w-mat">Mat.</th>
+        <th class="w-np">Nom &amp; Prénom</th>
+        <th class="w-fn">Fonction</th>
+        <th class="w-af">Affectation</th>
+        <th class="w-rs">Réseau</th>
+        <th class="w-av">Avis</th>
+        <th class="nowrap w-dc">Décision</th>
+        <th class="nowrap w-nt">Note</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for r in rows %}
+      <tr>
+        <td class="nowrap">{{ r.matricule }}</td>
+        <td>{{ r.nom }} {{ r.prenom }}</td>
+        <td>{{ r.fonction }}</td>
+        <td>{{ r.affectation_code }} — {{ r.affectation_libelle }}</td>
+        <td>{{ r.reseau }}</td>
+        <td>{{ r.avis }}</td>
+        <td class="nowrap">{{ r.decision }}</td>
+        <td class="nowrap">{% if r.note %}{{ r.note }}{% else %}—{% endif %}</td>
+      </tr>
+      {% empty %}
+      <tr>
+        <td colspan="8" style="text-align:center;color:#777;">Aucun agent (Trajectoire = NON)</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <table class="signs">
+    <tr>
+      <td class="center">
+        Le Président<br><br>
+        <div class="sign-box"></div>
+      </td>
+      <td class="center">
+        Les Membres<br><br>
+        <div class="sign-box"></div>
+      </td>
+    </tr>
+  </table>
+
+  <div class="footer">
+    Fait à ..................................., le ...................................
+  </div>
+
+</body>
+</html>

@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-5" style="max-width: 760px;">
+  <div class="affx-card p-4">
+    <div class="h5 mb-3"><i class="fas fa-trash text-danger me-2"></i>Supprimer l’affectation</div>
+    <p class="mb-4">Voulez-vous vraiment supprimer <strong>{{ a.NumeroAffectation }}</strong> ?</p>
+    <form method="post">{% csrf_token %}
+      <div class="d-flex justify-content-end gap-2">
+        <a href="{% url 'affectations:list' %}" class="btn affx-btn-outline">Annuler</a>
+        <button class="btn btn-danger"><i class="fas fa-trash me-2"></i>Supprimer</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

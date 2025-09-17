@@ -1,0 +1,31 @@
+{% extends 'annonces/base_annonces.html' %}
+{% block title %}Supprimer l’annonce{% endblock %}
+{% load form_extras %}
+
+{% block content %}
+<div class="card card-elev">
+  <div class="card-body p-4">
+    <h5 class="mb-3 text-danger"><i class="fa fa-triangle-exclamation me-2"></i>Supprimer cette annonce ?</h5>
+
+    <div class="mb-3">
+      <div class="fw-semibold mb-1">{{ annonce.titre }}</div>
+      <div class="text-muted small mb-2">
+        {% if annonce.date_debut %}Du {{ annonce.date_debut|date:"d/m/Y" }}{% endif %}
+        {% if annonce.date_fin %} au {{ annonce.date_fin|date:"d/m/Y" }}{% endif %}
+        {% if not annonce.date_debut and not annonce.date_fin %}—{% endif %}
+      </div>
+      <div class="border rounded p-3 bg-light">
+        {{ annonce.contenu|linebreaksbr }}
+      </div>
+    </div>
+
+    <form method="post" class="d-flex justify-content-end gap-2">
+      {% csrf_token %}
+      <a href="{% url 'annonces:list' %}" class="btn btn-outline-secondary btn-pill">Annuler</a>
+      <button type="submit" class="btn btn-danger btn-pill">
+        <i class="fa fa-trash me-2"></i>Supprimer
+      </button>
+    </form>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Lettre d’affectation – Modèle 3</title>
+<style>
+  @page { size: A4; margin: 22mm 20mm; }
+  body { font-family: DejaVu Sans, Helvetica, Arial, sans-serif; font-size: 11pt; line-height: 1.45; color:#111; }
+  .top { display:flex; justify-content:space-between; margin-bottom: 10mm; }
+  .top .ref { color:#666; }
+  .bloc { margin: 7mm 0; }
+  .dest .name { font-weight:700; font-size:12pt; }
+  .obj { font-weight:800; letter-spacing:.3px; margin: 6mm 0 5mm; }
+  p { margin: 3.5mm 0; text-align: justify; }
+  .signs { display:flex; gap:18mm; margin-top:16mm; }
+  .sign { flex:1; }
+  .sign .role { text-transform:uppercase; font-size:10pt; color:#333; }
+  .small { font-size:10pt; color:#444; }
+</style>
+</head>
+<body>
+
+  <!-- En-tête -->
+  <div class="top">
+    <div><strong>Banque Populaire</strong></div>
+    <div class="ref">Réf. {{ aff.num }} — {{ ville|default:"Tanger" }}, {% if aff.date_lettre %}{{ aff.date_lettre|date:"d/m/Y" }}{% else %}…………{% endif %}</div>
+  </div>
+
+  <!-- Destinataire -->
+  <div class="dest bloc">
+    <div class="name">{{ aff.civilite|default:"Monsieur" }} {{ aff.nom }} {{ aff.prenom }}</div>
+    <div class="small">Matricule : {{ aff.matricule }}</div>
+    {% if aff.arbo %}<div class="small">{{ aff.arbo }}</div>{% endif %}
+  </div>
+
+  <!-- Objet -->
+  <div class="obj">OBJET : AFFECTATION</div>
+
+  <!-- Corps -->
+  <p>
+    Nous vous informons par la présente de votre affectation à la fonction de
+    <strong>{{ aff.nv_fct_lib }}</strong>
+    {% if aff.nv_fct_code %}(<strong>{{ aff.nv_fct_code }}</strong>){% endif %}
+    au sein de <strong>{{ aff.nv_aff_lib }}</strong>
+    {% if aff.nv_aff_code %}(<strong>{{ aff.nv_aff_code }}</strong>){% endif %},
+    relevant du <strong>{{ reseau|default:aff.arbo }}</strong>.
+  </p>
+
+  <p>
+    Cette affectation prend effet à compter du
+    {% if aff.nv_date_aff %}<strong>{{ aff.nv_date_aff|date:"d/m/Y" }}</strong>{% else %}…………{% endif %}.
+    Vous êtes prié(e) de vous présenter à votre supérieur hiérarchique pour
+    convenir des modalités de prise de fonction.
+  </p>
+
+  <p>
+    Nous vous prions d’agréer, {{ aff.civilite|default:"Monsieur" }}, l’expression de nos salutations distinguées.
+  </p>
+
+  <!-- Signatures (double) -->
+  <div class="signs">
+    <div class="sign">
+      <div class="role">Capital Humain</div>
+      <div style="margin-top:12mm;">
+        {{ sign_gauche_nom|default:"DOHRI CHAKER" }}<br>
+        {{ sign_gauche_role|default:"DIRECTEUR PRINCIPAL" }}
+      </div>
+    </div>
+    <div class="sign" style="text-align:right;">
+      <div class="role">&nbsp;</div>
+      <div style="margin-top:12mm;">
+        {{ sign_droite_nom|default:"AFFANE MOHAMED" }}<br>
+        {{ sign_droite_role|default:"PRÉSIDENT DU DIRECTOIRE" }}
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>

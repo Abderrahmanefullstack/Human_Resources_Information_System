@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container py-4">
+  <h4 class="mb-3">Créer un vivier</h4>
+  <div class="card p-4">
+    <p class="mb-4">Choisissez le type de fonctions :</p>
+    <div class="d-flex gap-3">
+      <a class="btn btn-primary" href="{% url 'vivier:add_agence' %}">
+        Fonctions d’Agence
+      </a>
+      <button class="btn btn-outline-secondary" disabled>
+        Fonctions de Réseau (à venir)
+      </button>
+    </div>
+  </div>
+</div>
+{% endblock %}

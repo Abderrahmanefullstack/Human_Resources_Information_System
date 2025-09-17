@@ -1,0 +1,62 @@
+{% extends 'annonces/base_annonces.html' %}
+{% block title %}{% if form.instance.pk %}Modifier{% else %}Créer{% endif %} une annonce{% endblock %}
+{% load form_extras %}
+
+{% block content %}
+<div class="card card-elev">
+  <div class="card-body p-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h5 class="mb-0">
+        {% if form.instance.pk %}✏️ Modifier{% else %}🆕 Nouvelle{% endif %} annonce
+      </h5>
+      <a href="{% url 'annonces:list' %}" class="btn btn-outline-secondary btn-pill">
+        <i class="fa fa-arrow-left me-2"></i>Retour
+      </a>
+    </div>
+
+    <form method="post" novalidate>
+      {% csrf_token %}
+
+      <div class="row g-3">
+        <div class="col-12">
+          <label class="form-label">Titre</label>
+          {{ form.titre|add_class:"form-control" }}
+          {% if form.titre.errors %}<div class="text-danger small">{{ form.titre.errors }}</div>{% endif %}
+        </div>
+
+        <div class="col-12">
+          <label class="form-label">Contenu</label>
+          {{ form.contenu|add_class:"form-control" }}
+          {% if form.contenu.errors %}<div class="text-danger small">{{ form.contenu.errors }}</div>{% endif %}
+        </div>
+
+        <div class="col-md-4">
+          <label class="form-label">Date début</label>
+          {{ form.date_debut|add_class:"form-control" }}
+          {% if form.date_debut.errors %}<div class="text-danger small">{{ form.date_debut.errors }}</div>{% endif %}
+        </div>
+
+        <div class="col-md-4">
+          <label class="form-label">Date fin</label>
+          {{ form.date_fin|add_class:"form-control" }}
+          {% if form.date_fin.errors %}<div class="text-danger small">{{ form.date_fin.errors }}</div>{% endif %}
+        </div>
+
+        <div class="col-md-4 d-flex align-items-end">
+          <div class="form-check form-switch">
+            {{ form.actif|add_class:"form-check-input" }}
+            <label class="form-check-label">Active</label>
+          </div>
+        </div>
+      </div>
+
+      <div class="d-flex justify-content-end gap-2 mt-4">
+        <a href="{% url 'annonces:list' %}" class="btn btn-light btn-pill">Annuler</a>
+        <button class="btn btn-primary btn-pill" type="submit">
+          <i class="fa fa-save me-2"></i>Enregistrer
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

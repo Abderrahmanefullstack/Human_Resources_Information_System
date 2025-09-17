@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-4">
+  <div class="affx-hero">
+    <div class="title h5 mb-1">Choisir un agent</div>
+    <div class="subtitle">
+      {% if type_aff == 'FONCTION' %}Sélection libre (1 ou plusieurs).
+      {% elif type_aff == 'AGENCE' %}Maximum 3 agents.
+      {% elif type_aff == 'LES_DEUX' %}Un seul agent.
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="d-flex justify-content-between align-items-center mt-3">
+    <form method="get" class="d-flex gap-2">
+      {{ form.q }}
+      <button class="btn affx-btn">Rechercher</button>
+    </form>
+    <div class="affx-muted small" id="sel-count">Aucun agent sélectionné</div>
+  </div>
+
+  <form method="post" class="mt-2">{% csrf_token %}
+    <div class="affx-card p-0">
+      <div class="table-responsive">
+        <table class="table align-middle mb-0 affx-table">
+          <thead>
+            <tr>
+              <th style="width:40px;">
+                {% if type_aff != 'LES_DEUX' %}
+                  <input type="checkbox" id="check-all">
+                {% endif %}
+              </th>
+              <th>Matricule</th><th>Nom</th><th>Prénom</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for ag in agents %}
+            <tr>
+              <td>
+                <input type="checkbox" name="selected" value="{{ ag.Matricule }}" class="row-check">
+              </td>
+              <td class="fw-semibold">{{ ag.matricule_formate }}</td>
+              <td>{{ ag.Nom }}</td>
+              <td>{{ ag.Prenom }}</td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="4" class="text-center py-4 affx-muted">Aucun agent</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="d-flex justify-content-end gap-2 mt-3">
+      <a href="{% url 'affectations:choose_type' %}" class="btn affx-btn-outline">Retour</a>
+      <button class="btn affx-btn">Suivant</button>
+    </div>
+  </form>
+</div>
+
+<script>
+  const typeAff = "{{ type_aff }}";
+  const maxSel = {{ rule.max|default:"null" }};
+  const minSel = {{ rule.min|default:"1" }};
+  const rows = Array.from(document.querySelectorAll('.row-check'));
+  const all = document.getElementById('check-all');
+  const badge = document.getElementById('sel-count');
+
+  function countSel(){ return rows.filter(x=>x.checked).length; }
+  function updateBadge(){
+    const n = countSel();
+    if(n===0){ badge.textContent = 'Aucun agent sélectionné'; return; }
+    if(maxSel){ badge.textContent = `${n} agent(s) sélectionné(s) — max ${maxSel}`; }
+    else { badge.textContent = `${n} agent(s) sélectionné(s)`; }
+  }
+
+  // Règle "un seul agent" (LES_DEUX)
+  function enforceSingle(changed){
+    if(typeAff === 'LES_DEUX' && changed.checked){
+      rows.forEach(x => { if(x !== changed) x.checked = false; });
+    }
+  }
+
+  // Règle "max 3" (AGENCE)
+  function enforceMax(changed){
+    if(maxSel && countSel() > maxSel){
+      changed.checked = false;
+      alert(`Vous pouvez sélectionner au maximum ${maxSel} agent(s).`);
+    }
+  }
+
+  rows.forEach(chk=>{
+    chk.addEventListener('change', ()=>{
+      enforceSingle(chk);
+      enforceMax(chk);
+      updateBadge();
+      if(all){ all.checked = rows.every(x=>x.checked); }
+    });
+  });
+
+  if(all){
+    all.addEventListener('change', ()=>{
+      const target = !!all.checked;
+      rows.forEach(x=>x.checked = target);
+      // Si maxSel défini (ex: 3), on limite
+      if(maxSel && countSel() > maxSel){
+        rows.forEach((x,i)=> x.checked = i < maxSel);
+        alert(`Vous pouvez sélectionner au maximum ${maxSel} agent(s).`);
+        all.checked = rows.every(x=>x.checked);
+      }
+      updateBadge();
+    });
+  }
+
+  updateBadge();
+</script>
+{% endblock %}

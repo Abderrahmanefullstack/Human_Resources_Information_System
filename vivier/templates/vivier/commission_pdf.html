@@ -1,0 +1,105 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Fiche Agent — {{ v.NumCommission }}</title>
+<style>
+  @page { size: A4; margin: 14mm; }
+  body { font-family: DejaVu Sans, Helvetica, Arial, sans-serif; font-size: 10.5pt; color:#111; }
+
+  /* En-tête sobre */
+  table.header { width:100%; border-bottom:1.2pt solid #000; margin-bottom:8pt; border-collapse:collapse; }
+  table.header td { font-size:9.5pt; color:#222; padding:2pt 0; }
+  .left { text-align:left; font-weight:bold; }
+  .right { text-align:right; }
+
+  /* Titre encadré (double bordure) */
+  .title-wrap { margin:6pt 0 10pt 0; }
+  .title-outer { border:1.2pt solid #000; padding:2pt; }
+  .title-inner { border:1.2pt solid #000; padding:6pt; text-align:center; font-size:14pt; font-weight:bold; }
+
+  /* Section encadrée avec entête grisée */
+  .section { border:1.2pt solid #000; margin:8pt 0; }
+  .section-title { background:#eee; border-bottom:1.2pt solid #000; padding:6pt 8pt; font-weight:bold; font-size:11.5pt; }
+  .inner { padding:6pt 8pt; }
+
+  /* Tableau libellé/valeur (wrap contrôlé) */
+  table.form { width:100%; border-collapse:collapse; table-layout:fixed; }
+  table.form td { vertical-align:top; padding:3.5pt 6pt; }
+  table.form td.label { width:34%; color:#333; }
+  table.form td.value { width:66%; word-wrap:break-word; }
+
+  /* Signature */
+  .sign { margin-top:10pt; }
+  .sign-line { height:70px; border:1pt solid #000; width:65%; }
+
+  /* Pied */
+  .footer { margin-top:10pt; font-size:9pt; color:#444; }
+</style>
+</head>
+<body>
+
+  <!-- En-tête -->
+  <table class="header">
+    <tr>
+      <td class="left">Banque Populaire de Tanger Tétouan</td>
+      <td class="right">{% if v.DateCreation %}{{ v.DateCreation|date:"d/m/Y" }}{% endif %}</td>
+    </tr>
+  </table>
+
+  <!-- Titre double-cadre -->
+  <div class="title-wrap">
+    <div class="title-outer">
+      <div class="title-inner">FICHE AGENT — {{ v.NumCommission }}</div>
+    </div>
+  </div>
+
+  <!-- IDENTITÉ -->
+  <div class="section">
+    <div class="section-title">Identité</div>
+    <div class="inner">
+      <table class="form">
+        <tr><td class="label">Matricule</td><td class="value">{{ agent.matricule }}</td></tr>
+        <tr><td class="label">Nom</td><td class="value">{{ agent.nom|upper }}</td></tr>
+        <tr><td class="label">Prénom</td><td class="value">{{ agent.prenom|upper }}</td></tr>
+        <tr><td class="label">Fonction</td><td class="value">{{ agent.fonction }}</td></tr>
+        <tr><td class="label">Date fonction</td>
+            <td class="value">{% if agent.date_fonction %}{{ agent.date_fonction|date:"d/m/Y" }}{% endif %}</td></tr>
+        <tr><td class="label">Affectation (code)</td><td class="value">{{ agent.affectation_code }}</td></tr>
+        <tr><td class="label">Affectation (libellé)</td><td class="value">{{ agent.affectation_libelle }}</td></tr>
+        <tr><td class="label">Réseau</td><td class="value">{{ agent.reseau }}</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <!-- COMMISSION -->
+  <div class="section">
+    <div class="section-title">Commission</div>
+    <div class="inner">
+      <table class="form">
+        <tr><td class="label">Sanction</td><td class="value">{{ commission.Sanction }}</td></tr>
+        <tr><td class="label">PI n-1</td><td class="value">{{ commission.PI_n_1 }}</td></tr>
+        <tr><td class="label">PI n-2</td><td class="value">{{ commission.PI_n_2 }}</td></tr>
+        <tr><td class="label">PI n-3</td><td class="value">{{ commission.PI_n_3 }}</td></tr>
+        <tr><td class="label">Avis</td><td class="value">{{ commission.AvisCommission }}</td></tr>
+        <tr><td class="label">Note</td><td class="value">{{ commission.Note }}</td></tr>
+        <tr><td class="label">Décision</td><td class="value">{{ commission.Decision }}</td></tr>
+        <tr><td class="label">Motif décision</td><td class="value">{{ commission.MotifDecision }}</td></tr>
+        <tr><td class="label">Caractère</td><td class="value">{{ commission.Caractere }}</td></tr>
+      </table>
+
+      <div class="sign">
+        <div>Visa / Signature :</div>
+        <div class="sign-line"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Pied -->
+  <div class="footer">
+    Fait à ..................................., le ...................................
+  </div>
+
+</body>
+</html>

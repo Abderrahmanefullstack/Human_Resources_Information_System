@@ -1,0 +1,14 @@
+<!DOCTYPE html><html><head><meta charset="utf-8">
+<style>
+@page{size:A4;margin:18mm} body{font-family:DejaVu Sans,Helvetica,Arial,sans-serif;font-size:11pt}
+h2{text-align:center;margin:0 0 12pt 0} p{margin:6pt 0}
+</style></head><body>
+<h2>Lettre d’affectation</h2>
+<p><strong>N° :</strong> {{ aff.num }}</p>
+<p><strong>Matricule :</strong> {{ aff.matricule }} — <strong>{{ aff.nom }} {{ aff.prenom }}</strong></p>
+<p><strong>Affectation :</strong> {{ aff.nv_aff_code }} — {{ aff.nv_aff_lib }}</p>
+<p><strong>Fonction :</strong> {{ aff.nv_fct_code }} — {{ aff.nv_fct_lib }}</p>
+<p><strong>Date d’effet :</strong> {% if aff.nv_date_aff %}{{ aff.nv_date_aff|date:"d/m/Y" }}{% endif %}</p>
+<hr>
+<p>Texte de la lettre…</p>
+</body></html>

@@ -1,0 +1,373 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Erreur Technique - Application</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #4361ee;
+            --danger: #e63946;
+            --dark: #1d3557;
+            --light: #f1faee;
+            --gray: #8d99ae;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #1d3557 0%, #457b9d 100%);
+            color: #333;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .error-container {
+            max-width: 900px;
+            width: 100%;
+            background: white;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 15px 50px rgba(0, 0, 0, 0.2);
+            display: flex;
+            flex-direction: column;
+            animation: fadeIn 0.6s ease-out;
+        }
+        
+        .error-header {
+            background: var(--danger);
+            color: white;
+            padding: 30px 40px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+        
+        .error-icon {
+            font-size: 3.5rem;
+            animation: pulse 2s infinite;
+        }
+        
+        .error-title {
+            font-size: 2.2rem;
+            font-weight: 700;
+        }
+        
+        .error-content {
+            padding: 40px;
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+        
+        .error-message {
+            background: var(--light);
+            padding: 25px;
+            border-radius: 12px;
+            border-left: 4px solid var(--danger);
+        }
+        
+        .error-message h3 {
+            color: var(--danger);
+            margin-bottom: 15px;
+            font-size: 1.4rem;
+        }
+        
+        .error-details {
+            background: #f8f9fa;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+        
+        .details-header {
+            background: var(--dark);
+            color: white;
+            padding: 15px 25px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .details-content {
+            padding: 0;
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.4s ease-out;
+        }
+        
+        .details-content.expanded {
+            padding: 25px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        pre {
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            background: #2b2d42;
+            color: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            overflow: auto;
+            line-height: 1.5;
+            margin: 0;
+        }
+        
+        .actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-top: 10px;
+        }
+        
+        .btn {
+            padding: 14px 28px;
+            border-radius: 8px;
+            font-weight: 500;
+            font-size: 1rem;
+            cursor: pointer;
+            border: none;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+        
+        .btn-outline {
+            background: transparent;
+            border: 2px solid var(--primary);
+            color: var(--primary);
+        }
+        
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .btn-primary:hover {
+            background: #3a56d4;
+        }
+        
+        .btn-outline:hover {
+            background: #f0f5ff;
+        }
+        
+        .support-section {
+            background: #f0f8ff;
+            padding: 25px;
+            border-radius: 12px;
+            border-top: 3px solid var(--primary);
+            margin-top: 10px;
+        }
+        
+        .support-section h3 {
+            color: var(--dark);
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .contact-info {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 25px;
+            margin-top: 15px;
+        }
+        
+        .contact-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .contact-icon {
+            width: 40px;
+            height: 40px;
+            background: var(--primary);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.1rem;
+        }
+        
+        .error-footer {
+            background: #f8f9fa;
+            padding: 20px 40px;
+            text-align: center;
+            color: var(--gray);
+            font-size: 0.9rem;
+            border-top: 1px solid #e9ecef;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+        
+        @media (max-width: 768px) {
+            .error-header {
+                flex-direction: column;
+                text-align: center;
+                padding: 25px 20px;
+            }
+            
+            .error-content {
+                padding: 25px;
+            }
+            
+            .actions {
+                flex-direction: column;
+            }
+            
+            .btn {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="error-container">
+        <div class="error-header">
+            <div class="error-icon">
+                <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            <div>
+                <h1 class="error-title">Erreur Technique</h1>
+                <p>Une erreur inattendue s'est produite dans l'application</p>
+            </div>
+        </div>
+        
+        <div class="error-content">
+            <div class="error-message">
+                <h3><i class="fas fa-info-circle"></i> Que s'est-il passé ?</h3>
+                <p>Notre application a rencontré un problème technique qui l'empêche de fonctionner correctement. Ne vous inquiétez pas, notre équipe a été automatiquement notifiée et travaille à résoudre le problème.</p>
+            </div>
+            
+            <div class="error-details">
+                <div class="details-header" id="toggleDetails">
+                    <h3><i class="fas fa-bug"></i> Détails de l'erreur</h3>
+                    <span class="toggle-icon"><i class="fas fa-chevron-down"></i></span>
+                </div>
+                <div class="details-content" id="errorDetails">
+                    <pre>Traceback (most recent call last):
+  File "/app/main.py", line 42, in process_request
+    result = database.query(user_input)
+  File "/app/database.py", line 78, in query
+    return connection.execute(sql)
+DatabaseError: relation "users" does not exist
+LINE 1: SELECT * FROM users WHERE id = 42;</pre>
+                </div>
+            </div>
+            
+            <div class="actions">
+                <button class="btn btn-primary">
+                    <i class="fas fa-home"></i> Retour à l'accueil
+                </button>
+                <button class="btn btn-outline">
+                    <i class="fas fa-redo"></i> Réessayer
+                </button>
+            </div>
+            
+            <div class="support-section">
+                <h3><i class="fas fa-headset"></i> Besoin d'aide ?</h3>
+                <p>Si le problème persiste, n'hésitez pas à contacter notre équipe de support :</p>
+                
+                <div class="contact-info">
+                    <div class="contact-item">
+                        <div class="contact-icon">
+                            <i class="fas fa-envelope"></i>
+                        </div>
+                        <div>
+                            <strong>Email</strong>
+                            <p>support@example.com</p>
+                        </div>
+                    </div>
+                    
+                    <div class="contact-item">
+                        <div class="contact-icon">
+                            <i class="fas fa-phone"></i>
+                        </div>
+                        <div>
+                            <strong>Téléphone</strong>
+                            <p>+33 1 23 45 67 89</p>
+                        </div>
+                    </div>
+                    
+                    <div class="contact-item">
+                        <div class="contact-icon">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                        <div>
+                            <strong>Horaires</strong>
+                            <p>Lun-Ven: 9h-18h</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="error-footer">
+            <p>Application &copy; 2023. Tous droits réservés. [Erreur ID: #ERR-5A7B9C]</p>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const toggleButton = document.getElementById('toggleDetails');
+            const detailsContent = document.getElementById('errorDetails');
+            const toggleIcon = toggleButton.querySelector('.toggle-icon i');
+            
+            toggleButton.addEventListener('click', function() {
+                detailsContent.classList.toggle('expanded');
+                
+                if (detailsContent.classList.contains('expanded')) {
+                    toggleIcon.className = 'fas fa-chevron-up';
+                } else {
+                    toggleIcon.className = 'fas fa-chevron-down';
+                }
+            });
+            
+            // Simulate dynamic error content
+            setTimeout(() => {
+                const errorElement = document.querySelector('pre');
+                if (errorElement) {
+                    errorElement.innerHTML = `{{ error }}`;
+                }
+            }, 300);
+        });
+    </script>
+</body>
+</html>
+{% endblock %}
+
+

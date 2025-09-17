@@ -1,0 +1,226 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>PV Comité Développement RH — {{ v.NumCommission }}</title>
+<style>
+  /* xhtml2pdf-friendly */
+  @page { size: A4; margin: 14mm; }
+  body { font-family: DejaVu Sans, Helvetica, Arial, sans-serif; color:#111; font-size: 10.5pt; }
+
+  /* En-tête sur 2 lignes comme le Word */
+  table.header { width:100%; border-bottom:1.2pt solid #000; margin-bottom:8pt; border-collapse:collapse; }
+  table.header td { padding:2pt 0; font-size:10pt; color:#222; }
+  .left  { text-align:left;  font-weight:bold; }
+  .right { text-align:right; }
+
+  /* Titre centré double cadre */
+  .title-wrap { margin:10pt 0 12pt 0; }
+  .title-outer { border:1.2pt solid #000; padding:2pt; }
+  .title-inner { border:1.2pt solid #000; padding:7pt; text-align:center; font-weight:bold; font-size:14pt; }
+
+  /* Grille libellé/valeur (Direction / Poste / Comité) */
+  table.grid2 { width:100%; border-collapse:collapse; margin:8pt 0 10pt 0; table-layout:fixed; }
+  table.grid2 td { vertical-align:top; padding:5pt 7pt; border:1.2pt solid #000; }
+  table.grid2 .label { width:30%; background:#f4f4f4; font-weight:bold; }
+  table.grid2 .value { width:70%; }
+
+  /* Checkboxes pour “Comité” (relève / carrière) */
+  .chk { font-family: DejaVu Sans, Arial, sans-serif; } /* pour ☑/☐ */
+  .gap { display:inline-block; width:14pt; }
+
+  /* Tableau Identité (entête grisée, cadres forts) */
+  table.idtab, table.idtab2, table.crit {
+    width:100%; border-collapse:collapse; table-layout:fixed; margin:8pt 0;
+  }
+  table.idtab th, table.idtab td,
+  table.idtab2 th, table.idtab2 td,
+  table.crit th, table.crit td {
+    border:1.2pt solid #000; padding:5pt 7pt; vertical-align:top;
+  }
+  th { background:#eee; font-weight:bold; }
+  .nowrap { white-space:nowrap; }
+
+  /* Colonnes identitaires (calquées sur la maquette) */
+  .w-mat { width:16%; }
+  .w-np  { width:24%; }
+  .w-de  { width:18%; } /* Date entrée CPM */
+  .w-aff { width:42%; }
+
+  .w-foc { width:40%; } /* Fonction Occupée */
+  .w-dbf { width:20%; } /* Date début fonction */
+  .w-sen { width:40%; } /* Séniorité */
+
+  /* Critères (7 colonnes) */
+  .w-mp  { width:16%; }
+  .w-pi1 { width:12%; }
+  .w-ind { width:12%; } /* “Individuelle” (si tu veux une 2e métrique performance) */
+  .w-pi3 { width:12%; }
+  .w-acm { width:16%; } /* Ancienneté CPM */
+  .w-afn { width:20%; } /* Ancienneté dans la fonction occupée */
+  .w-san { width:12%; } /* Sanction */
+
+  /* Zones texte multilignes */
+  .box { border:1.2pt solid #000; min-height:70pt; padding:7pt; margin:8pt 0; }
+
+  /* Signatures (4 colonnes) */
+  table.signs { width:100%; border-collapse:collapse; margin-top:12pt; table-layout:fixed; }
+  table.signs td { border:1.2pt solid #000; vertical-align:top; padding:10pt 8pt; height:90pt; text-align:center; }
+  .role { font-weight:bold; margin-bottom:8pt; }
+
+  /* Petits libellés gris */
+  .muted { color:#444; font-size:10pt; }
+</style>
+</head>
+<body>
+
+  <!-- En-tête (2 lignes comme dans le Word) -->
+  <table class="header">
+    <tr>
+      <td class="left">Banque Populaire de Tanger Tétouan</td>
+      <td class="right">{% if v.DateCreation %}Date : {{ v.DateCreation|date:"d/m/Y" }}{% else %}Date : __________{% endif %}</td>
+    </tr>
+    <tr>
+      <td class="left">DCH/DEVELOPPEMENT RH</td>
+      <td class="right"></td>
+    </tr>
+  </table>
+
+  <!-- Titre principal -->
+  <div class="title-wrap">
+    <div class="title-outer"><div class="title-inner">
+      PV Comité Développement RH
+    </div></div>
+  </div>
+
+  <!-- Direction / Poste à pourvoir / Comité -->
+  <table class="grid2">
+    <tr>
+      <td class="label">Direction :</td>
+      <td class="value">{{ v.DirectionReseau|default:"____________________" }}</td>
+    </tr>
+    <tr>
+      <td class="label">Poste à pourvoir :</td>
+      <td class="value">{{ v.FonctionCible|default:"____________________" }}</td>
+    </tr>
+    <tr>
+      <td class="label">Comité :</td>
+      <td class="value chk">
+        {% with t=commission_type|default_if_none:"" %}
+          {% if t|lower == "relève" or t|lower == "releve" %}
+            ☑ Comité de relève <span class="gap"></span> ☐ Comité de carrière
+          {% elif t|lower == "carrière" or t|lower == "carriere" %}
+            ☐ Comité de relève <span class="gap"></span> ☑ Comité de carrière
+          {% else %}
+            ☐ Comité de relève <span class="gap"></span> ☐ Comité de carrière
+          {% endif %}
+        {% endwith %}
+      </td>
+    </tr>
+  </table>
+
+  <!-- Identité agent (1er tableau) -->
+  <table class="idtab">
+    <thead>
+      <tr>
+        <th class="w-mat nowrap">Matricule</th>
+        <th class="w-np">Nom et prénom</th>
+        <th class="w-de nowrap">Date Entrée CPM</th>
+        <th class="w-aff">Affectation</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="nowrap">{{ agent.matricule }}</td>
+        <td>{{ agent.nom }} {{ agent.prenom }}</td>
+        <td class="nowrap">{% if agent.date_entree %}{{ agent.date_entree|date:"d/m/Y" }}{% endif %}</td>
+        <td>{{ agent.affectation_code }} — {{ agent.affectation_libelle }}</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- Identité agent (2e tableau) -->
+  <table class="idtab2" style="margin-top:-1.2pt">
+    <thead>
+      <tr>
+        <th class="w-foc">Fonction Occupée</th>
+        <th class="w-dbf nowrap">Date début fonction</th>
+        <th class="w-sen">Séniorité</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>{{ agent.fonction }}</td>
+        <td class="nowrap">{% if agent.date_fonction %}{{ agent.date_fonction|date:"d/m/Y" }}{% endif %}</td>
+        <td>{% if agent.seniorite %}{{ agent.seniorite }}{% else %}{% if agent.anciennete_fonction %}{{ agent.anciennete_fonction }}{% else %}—{% endif %}{% endif %}</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- Critères de sélection -->
+  <div class="muted" style="margin-top:4pt;">Critères de sélection des candidats pour évolution exceptionnelle par emploi</div>
+  <table class="crit">
+    <thead>
+      <tr>
+        <th class="w-mp">Moyenne Performance</th>
+        <th class="w-pi1 nowrap">PI n-1</th>
+        <th class="w-ind nowrap">Individuelle</th>
+        <th class="w-pi3 nowrap">PI n-3</th>
+        <th class="w-acm nowrap">Ancienneté CPM</th>
+        <th class="w-afn">Ancienneté dans la fonction occupée</th>
+        <th class="w-san">Sanction</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>{% if commission.MoyennePerformance %}{{ commission.MoyennePerformance }}{% else %}—{% endif %}</td>
+        <td class="nowrap">{% if commission.PI_n_1 %}{{ commission.PI_n_1 }}{% else %}—{% endif %}</td>
+        <td class="nowrap">{% if commission.PI_Individuelle %}{{ commission.PI_Individuelle }}{% else %}—{% endif %}</td>
+        <td class="nowrap">{% if commission.PI_n_3 %}{{ commission.PI_n_3 }}{% else %}—{% endif %}</td>
+        <td class="nowrap">{% if agent.anciennete_cpm %}{{ agent.anciennete_cpm }}{% else %}—{% endif %}</td>
+        <td class="nowrap">{% if agent.anciennete_fonction %}{{ agent.anciennete_fonction }}{% else %}—{% endif %}</td>
+        <td>{% if commission.Sanction %}{{ commission.Sanction }}{% else %}—{% endif %}</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- Avis / Caractère exceptionnel / Argumentaire -->
+  <div style="margin-top:6pt;">
+    <div><strong>Avis du comité</strong></div>
+    <div class="box">{{ commission.AvisCommission|default:"" }}</div>
+  </div>
+
+  <div>
+    <div><strong>Caractère exceptionnel de la demande :</strong></div>
+    <div class="box">{{ commission.Caractere|default:"" }}</div>
+  </div>
+
+  <div>
+    <div><strong>L’argumentaire de nomination :</strong></div>
+    <div class="box">{{ commission.MotifDecision|default:"" }}</div>
+  </div>
+
+  <!-- Décision & Note (si tu veux conserver la ligne dédiée) -->
+  <table class="grid2" style="margin-top:6pt;">
+    <tr>
+      <td class="label">Décision :</td>
+      <td class="value">{% if commission.Decision %}{{ commission.Decision }}{% else %}—{% endif %}</td>
+    </tr>
+    <tr>
+      <td class="label">Note :</td>
+      <td class="value">{% if commission.Note %}{{ commission.Note }}{% else %}—{% endif %}</td>
+    </tr>
+  </table>
+
+  <!-- Signatures (4 blocs) -->
+  <table class="signs">
+    <tr>
+      <td><div class="role">Directeur Marché Retail</div><div>Date &amp; Signature</div></td>
+      <td><div class="role">Directeur de Réseau</div><div>Date &amp; Signature</div></td>
+      <td><div class="role">Directeur des Ressources humaines</div><div>Date &amp; Signature</div></td>
+      <td><div class="role">Président du directoire</div><div>Date &amp; Signature</div></td>
+    </tr>
+  </table>
+</body>
+</html>

@@ -1,0 +1,201 @@
+.affx-table-wrapper {
+    position: relative;
+}
+
+.affx-table {
+    --cell-px: .75rem;
+    --cell-py: .55rem;
+    --maxw-sm: 8rem;
+    --maxw-md: 12rem;
+    --maxw-lg: 16rem;
+    --header-bg: #B23214;
+}
+
+.affx-table thead th {
+    position: sticky;
+    top: 0;
+    background: var(--header-bg);
+    color: #fff;
+    z-index: 2;
+    white-space: nowrap;
+}
+
+.affx-table th,
+.affx-table td {
+    padding: var(--cell-py) var(--cell-px);
+    vertical-align: middle;
+    line-height: 1.25;
+    border-color: #FFFFFF;
+}
+
+
+
+.affx-nowrap {
+    white-space: nowrap;
+}
+
+.affx-truncate {
+    max-width: var(--maxw-md);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.affx-truncate-lg {
+    max-width: var(--maxw-lg);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.affx-truncate-sm {
+    max-width: var(--maxw-sm);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.affx-badge {
+    font-size: .75rem;
+    padding: .35rem .55rem;
+}
+
+@media (max-width: 1400px) {
+    .col-low {
+        display: none;
+    }
+}
+
+@media (max-width: 1200px) {
+    .col-medlow {
+        display: none;
+    }
+}
+
+@media (max-width: 992px) {
+    .col-medium {
+        display: none;
+    }
+}
+
+/* Density toggle */
+.affx-density-comfy .affx-table th,
+.affx-density-comfy .affx-table td {
+    --cell-py: .85rem;
+}
+
+.affx-density-compact .affx-table th,
+.affx-density-compact .affx-table td {
+    --cell-py: .35rem;
+}
+
+/* Optional zebra (règle originale, désactivée) */
+/* .affx-table tbody tr:nth-of-type(odd){ background: #fcfcfd; } */
+
+/* 🎨 micro-design soigné (ne touche rien d’autre) */
+.toolbar-vivier.card {
+    border: 0;
+    border-left: 4px solid #e67e22;
+}
+
+/* liseré orange BCP */
+.toolbar-vivier .card-body {
+    padding: .6rem .8rem;
+    background: #fff;
+}
+
+.toolbar-vivier .btn {
+    border-radius: 999px;
+}
+
+/* pills */
+.toolbar-vivier .btn-group .btn {
+    min-width: 86px;
+}
+
+.toolbar-vivier .vr {
+    opacity: .25;
+}
+
+@media (max-width: 768px) {
+    .toolbar-vivier .title {
+        width: 100%;
+        margin-bottom: .35rem;
+    }
+
+    .toolbar-vivier .right {
+        width: 100%;
+        gap: .4rem;
+    }
+
+    .toolbar-vivier .btn-group {
+        flex: 1;
+        justify-content: space-between;
+    }
+
+    .toolbar-vivier .export-btn {
+        width: 100%;
+    }
+}
+
+.affx-table tbody tr.odd-row {
+    background-color: #fff !important;
+    color: #000 !important;
+}
+
+.affx-table tbody tr.even-row {
+    background-color: #f8f9fa !important;
+    color: #000 !important;
+}
+
+.affx-table tbody tr:hover {
+    background: #fff3e6 !important;
+}
+
+/* ------- Vivier eligible table ------- */
+.affx-table thead th {
+    background: #B23214 !important;
+    /* rouge BCP */
+    color: #fff !important;
+}
+
+.affx-table tbody tr.odd-row {
+    background: #fff !important;
+    color: #000 !important;
+}
+
+.affx-table tbody tr.even-row {
+    background: #f8f9fa !important;
+    color: #000 !important;
+}
+
+/* Hover doux */
+.affx-table tbody tr:hover {
+    background: #fff3e6 !important;
+}
+
+/* Garde ici tes classes affx-nowrap, affx-truncate, etc. */
+.affx-nowrap {
+    white-space: nowrap;
+}
+
+.affx-truncate {
+    max-width: 12rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.affx-truncate-lg {
+    max-width: 16rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.affx-truncate-sm {
+    max-width: 8rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}

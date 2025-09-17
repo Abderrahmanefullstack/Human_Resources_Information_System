@@ -1,0 +1,14 @@
+{% extends "base.html" %}{% block content %}
+<div class="container mt-4">
+  <h5 class="fw-bold mb-3">Type d’affectation</h5>
+  <form method="post" class="card p-3 shadow-sm">{% csrf_token %}
+    {{ form.type_affectation }}
+    <div class="text-end mt-3">
+      <a href="{% url 'affectations:choose_agent' %}" class="btn btn-sm btn-outline-secondary">Retour</a>
+      <button class="btn btn-sm btn-primary">Suivant</button>
+    </div>
+  </form>
+</div>{% endblock %}
+
+
+

@@ -1,0 +1,10 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Détail de la fonction</h2>
+<ul class="list-group">
+    <li class="list-group-item"><strong>Code :</strong> {{ fonction.Code }}</li>
+    <li class="list-group-item"><strong>Intitulé :</strong> {{ fonction.Intitule }}</li>
+    <li class="list-group-item"><strong>Intitulé Complet :</strong> {{ fonction.Intitule_Complet }}</li>
+</ul>
+<a href="{% url 'fonctions:list' %}" class="btn btn-secondary mt-3">⬅️ Retour</a>
+{% endblock %}

@@ -1,0 +1,330 @@
+{% extends "base.html" %}
+{% block content %}
+<style>
+/* ------- Vivier eligible table ------- */
+.affx-table-wrapper { position: relative; }
+.affx-table {
+  --cell-px: .75rem;
+  --cell-py: .55rem;
+  --maxw-sm: 8rem;
+  --maxw-md: 12rem;
+  --maxw-lg: 16rem;
+  --header-bg: #B23214;
+}
+.affx-table thead th {
+  position: sticky; top: 0;
+  background: var(--header-bg);
+  color: #fff;
+  z-index: 2;
+  white-space: nowrap;
+}
+.affx-table th, .affx-table td {
+  padding: var(--cell-py) var(--cell-px);
+  vertical-align: middle;
+  line-height: 1.25;
+  border-color: #FFFFFF;
+}
+
+
+
+.affx-nowrap    { white-space: nowrap; }
+.affx-truncate   { max-width: var(--maxw-md); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.affx-truncate-lg{ max-width: var(--maxw-lg); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.affx-truncate-sm{ max-width: var(--maxw-sm); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.affx-badge      { font-size: .75rem; padding:.35rem .55rem; }
+
+@media (max-width: 1400px) { .col-low     { display: none; } }
+@media (max-width: 1200px) { .col-medlow  { display: none; } }
+@media (max-width: 992px)  { .col-medium  { display: none; } }
+
+/* Density toggle */
+.affx-density-comfy   .affx-table th,
+.affx-density-comfy   .affx-table td { --cell-py: .85rem; }
+.affx-density-compact .affx-table th,
+.affx-density-compact .affx-table td { --cell-py: .35rem; }
+
+/* Optional zebra (règle originale, désactivée) */
+/* .affx-table tbody tr:nth-of-type(odd){ background: #fcfcfd; } */
+
+  /* 🎨 micro-design soigné (ne touche rien d’autre) */
+  .toolbar-vivier.card { border: 0; border-left: 4px solid #e67e22; }              /* liseré orange BCP */
+  .toolbar-vivier .card-body { padding: .6rem .8rem; background: #fff; }
+  .toolbar-vivier .btn { border-radius: 999px; }                                   /* pills */
+  .toolbar-vivier .btn-group .btn { min-width: 86px; }
+  .toolbar-vivier .vr { opacity:.25; }
+  @media (max-width: 768px){
+    .toolbar-vivier .title { width: 100%; margin-bottom:.35rem; }
+    .toolbar-vivier .right { width:100%; gap:.4rem; }
+    .toolbar-vivier .btn-group { flex:1; justify-content:space-between; }
+    .toolbar-vivier .export-btn { width:100%; }
+  }
+.affx-table tbody tr.odd-row  { background-color:#fff !important; color:#000 !important; }
+.affx-table tbody tr.even-row { background-color:#f8f9fa !important; color:#000 !important; }
+.affx-table tbody tr:hover { background:#fff3e6 !important; }
+</style>
+
+<div class="container-fluid">
+
+  <div class="d-flex align-items-center justify-content-between mb-3">
+    <h3 class="mb-0">Vivier — {{ v.NumCommission }}</h3>
+    <a href="{% url 'vivier:list' %}" class="btn btn-outline-secondary">Retour</a>
+  </div>
+
+  {# Messages d'erreur globaux si besoin #}
+  {% if form.errors or val_form.errors %}
+    <div class="alert alert-danger">Des erreurs empêchent l’enregistrement. Vérifie les champs surlignés.</div>
+  {% endif %}
+
+  <div class="card shadow-sm mb-4">
+    <div class="card-header bg-light fw-semibold">Informations</div>
+    <div class="card-body">
+      <div class="row gy-2">
+        <div class="col-md-4">
+          <div class="text-muted small">N° Vivier</div>
+          <div class="fw-semibold">{{ v.NumCommission }}</div>
+        </div>
+        <div class="col-md-4">
+          <div class="text-muted small">Date de création</div>
+          <div class="fw-semibold">{{ v.DateCreation|date:"d/m/Y" }}</div>
+        </div>
+        <div class="col-md-4">
+          <div class="text-muted small">Fonction cible</div>
+          <div class="fw-semibold">{{ v.FonctionCible }}</div>
+        </div>
+        <div class="col-md-4">
+          <div class="text-muted small">Direction / Réseau</div>
+          <div class="fw-semibold">{{ v.DirectionReseau|default:"—" }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {# ====== OUVERTURE D’UN SEUL FORMULAIRE (Validation + Compléments) ====== #}
+  <form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+
+    {# --- Carte : Validation --- #}
+    <div class="card shadow-sm mb-4">
+      <div class="card-header bg-light fw-semibold">Validation</div>
+      <div class="card-body">
+        <div class="row g-5">
+          <div class="col-md-3">
+            <label class="form-label">{{ val_form.DateValidation.label }}</label>
+            {{ val_form.DateValidation }}
+            {% if val_form.DateValidation.errors %}
+              <div class="invalid-feedback d-block">{{ val_form.DateValidation.errors }}</div>
+            {% endif %}
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">{{ val_form.Valide.label }}</label>
+            <div class="form-check form-switch">
+              {{ val_form.Valide }}
+            </div>
+            {% if val_form.Valide.errors %}
+              <div class="invalid-feedback d-block">{{ val_form.Valide.errors }}</div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {% if form.non_field_errors %}
+      <div class="alert alert-danger">{{ form.non_field_errors }}</div>
+    {% endif %}
+    {% if val_form.non_field_errors %}
+      <div class="alert alert-danger">{{ val_form.non_field_errors }}</div>
+    {% endif %}
+
+    {# --- Carte : Saisie observation + pièces jointes --- #}
+    <div class="card shadow-sm mb-4">
+      <div class="card-header bg-light fw-semibold">Compléments</div>
+      <div class="card-body">
+        <div class="row g-3">
+
+          <div class="col-12">
+            <label class="form-label">{{ form.Observation.label }}</label>
+            {{ form.Observation }}
+            {% if form.Observation.errors %}
+              <div class="invalid-feedback d-block">{{ form.Observation.errors }}</div>
+            {% endif %}
+          </div>
+
+          <div class="col-12">
+            <label class="form-label">{{ form.pieces.label }}</label>
+
+            {% if v.pieces.all %}
+              <div class="mb-2">
+                <div class="text-muted small">Pièces déjà jointes :</div>
+                {% for pj in v.pieces.all %}
+                  <div class="d-flex align-items-center gap-3 mb-1">
+                    <div class="text-muted small">
+                      <strong>{{ pj.nom }}</strong> {% if pj.taille %}({{ pj.taille }} octets){% endif %}
+                    </div>
+                    <a href="{% url 'vivier:download_pj' pj.pk %}" class="btn btn-sm btn-outline-primary">
+                      <i class="fa fa-download me-1"></i> Télécharger
+                    </a>
+                  </div>
+                {% endfor %}
+              </div>
+              <div class="text-muted small mb-1">Ajouter / remplacer :</div>
+            {% endif %}
+
+            {{ form.pieces }}
+            {% if form.pieces.errors %}
+              <div class="invalid-feedback d-block">{{ form.pieces.errors }}</div>
+            {% endif %}
+            <div class="form-text">Tous formats autorisés (limite définie côté serveur).</div>
+          </div>
+
+        </div>
+      </div>
+
+      <div class="card-footer d-flex justify-content-end gap-2">
+        <a href="{% url 'vivier:list' %}" class="btn btn-outline-secondary">Annuler</a>
+        <button type="submit" class="btn btn-primary">Enregistrer</button>
+      </div>
+    </div>
+  </form>
+  {# ====== FIN DU SEUL FORMULAIRE ====== #}
+
+  <style>
+
+</style>
+
+<div class="card shadow-sm toolbar-vivier sticky-top mb-2" style="top:72px; z-index:1030;">
+  <div class="card-body">
+    <div class="d-flex flex-wrap align-items-center gap-2">
+      <h5 class="mb-0 title d-flex align-items-center gap-2">
+        <i class="fa-solid fa-users-viewfinder text-warning"></i>
+        Agents éligibles — {{ v.FonctionCible }}
+      </h5>
+
+      <div class="d-flex align-items-center gap-2 ms-auto right">
+        <div class="btn-group btn-group-sm" role="group" aria-label="Trajectoire">
+          <a href="?traj=oui"
+              class="btn {% if request.GET.traj == 'oui' %}btn-success{% else %}btn-outline-success{% endif %}">
+              Oui
+          </a>
+          <a href="?traj=non"
+              class="btn {% if request.GET.traj == 'non' %}btn-danger{% else %}btn-outline-danger{% endif %}">
+              Non
+          </a>
+          <a href="."
+              class="btn {% if not request.GET.traj %}btn-secondary{% else %}btn-outline-secondary{% endif %}">
+              Tous
+          </a>
+        </div>
+
+        <div class="vr d-none d-md-block"></div>
+
+        <div class="btn-group btn-group-sm" role="group" aria-label="Densité">
+          <button type="button" class="btn btn-outline-secondary" id="btnComfy">Confort</button>
+          <button type="button" class="btn btn-outline-secondary" id="btnNormal">Normal</button>
+          <button type="button" class="btn btn-outline-secondary" id="btnCompact">Compact</button>
+        </div>
+
+        <a href="{% url 'vivier:export_agents_excel' v.pk %}?{{ request.GET.urlencode }}"
+           class="btn btn-success btn-sm export-btn">
+          <i class="fa-regular fa-file-excel me-1"></i> Exporter Excel
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+  <div class="table-responsive affx-table-wrapper" id="affxTableHost">
+    <table class="table table-hover table-sm align-middle affx-table">
+      <thead class="table-light">
+        <tr>
+          <th class="affx-nowrap">Matricule</th>
+          <th class="affx-nowrap">Nom</th>
+          <th class="affx-nowrap">Prénom</th>
+          <th class="affx-nowrap col-medium">Date d'entrée</th>
+          <th class="affx-nowrap col-medium">Ancienneté CPM</th>
+          <th class="affx-nowrap col-medlow">Fonction Code</th>
+          <th class="affx-truncate-lg">Fonction Libellé</th>
+          <th class="affx-nowrap col-medium">Date fonction occupée</th>
+          <th class="affx-truncate col-low">Anc. fonction</th>
+          <th class="affx-nowrap col-medlow">Affectation Code</th>
+          <th class="affx-truncate-lg">Affectation Libellé</th>
+          <th class="affx-truncate-sm col-medlow">Réseau</th>
+          <th class="affx-nowrap">Trajectoire</th>
+          <th class="affx-truncate col-low">Sanction</th>
+          <th class="affx-nowrap col-medlow">PI N-1</th>
+          <th class="affx-nowrap col-medlow">PI N-2</th>
+          <th class="affx-nowrap col-medlow">PI N-3</th>
+          <th class="affx-truncate col-low">Avis de la commission</th>
+          <th class="affx-nowrap col-low">Note</th>
+          <th class="affx-nowrap">Décision</th>
+          <th class="affx-nowrap"></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in agents %}
+          <tr class="{% cycle 'odd-row' 'even-row' %}">
+          <td class="affx-nowrap">{{ row.matricule }}</td>
+          <td class="affx-nowrap">{{ row.nom }}</td>
+          <td class="affx-nowrap">{{ row.prenom }}</td>
+          <td class="affx-nowrap col-medium">{{ row.date_entree|date:"d/m/Y" }}</td>
+          <td class="affx-nowrap col-medium">{{ row.anciennete_cpm|default:"—" }}</td>
+          <td class="affx-nowrap col-medlow">{{ row.fonction_code|default:"—" }}</td>
+          <td class="affx-truncate-lg-3" title="{{ row.fonction_libelle }}">{{ row.fonction_libelle }}</td>
+          <td class="affx-nowrap col-medium">{{ row.date_fonction|date:"d/m/Y" }}</td>
+          <td class="affx-nowrap col-medium">{{ row.anciennete_fonction|default:"—" }}</td>
+          <td class="affx-nowrap col-medlow">{{ row.aff_code }}</td>
+          <td class="affx-truncate-lg" title="{{ row.aff_lib }}">{{ row.aff_lib }}</td>
+          <td class="affx-truncate-sm col-medlow" title="{{ row.reseau }}">{{ row.reseau }}</td>
+          <td class="affx-nowrap">
+            {% if row.trajectoire %}
+              <span class="badge bg-success affx-badge">Oui</span>
+            {% else %}
+              <span class="badge bg-danger affx-badge">Non</span>
+            {% endif %}
+          </td>
+          <td class="col-low">{{ row.sanction|default:"—" }}</td>
+          <td class="col-medlow">{{ row.pi_n1|default:"—" }}</td>
+          <td class="col-medlow">{{ row.pi_n2|default:"—" }}</td>
+          <td class="col-medlow">{{ row.pi_n3|default:"—" }}</td>
+          <td class="affx-truncate col-low" title="{{ row.avis }}">{{ row.avis|default:"—" }}</td>
+          <td class="col-low">{{ row.note|default:"—" }}</td>
+          <td class="affx-nowrap">
+            {% if row.decision == "RETENU" %}Retenu(e)
+            {% elif row.decision == "NON_RETENU" %}Non retenu(e)
+            {% else %}-{% endif %}
+          </td>
+          <td class="text-end affx-nowrap">
+            {% if row.trajectoire %}
+              <a class="btn btn-sm btn-primary"
+                 href="{% url 'vivier:commission_edit' v.pk row.matricule %}">Renseigner</a>
+            {% else %}
+              <button class="btn btn-sm btn-secondary" disabled>Renseigner</button>
+            {% endif %}
+
+            <a class="btn btn-sm btn-outline-dark ms-1"
+              target="_blank"
+              href="{% url 'vivier:commission_print' v.pk row.matricule %}">
+              Imprimer
+            </a>
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="21" class="text-center text-muted">Aucun agent à afficher.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <script>
+    const host = document.getElementById('affxTableHost');
+    const setDensity = (cls) => {
+      host.classList.remove('affx-density-comfy','affx-density-compact');
+      if (cls) host.classList.add(cls);
+    };
+    document.getElementById('btnComfy').addEventListener('click', () => setDensity('affx-density-comfy'));
+    document.getElementById('btnNormal').addEventListener('click', () => setDensity(''));
+    document.getElementById('btnCompact').addEventListener('click', () => setDensity('affx-density-compact'));
+  </script>
+
+</div>
+{% endblock %}

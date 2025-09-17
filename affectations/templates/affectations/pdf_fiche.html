@@ -1,0 +1,29 @@
+<!DOCTYPE html><html><head><meta charset="utf-8">
+<style>
+@page{size:A4;margin:14mm} body{font-family:DejaVu Sans,Helvetica,Arial,sans-serif;font-size:10.5pt}
+table{width:100%;border-collapse:collapse;margin:8pt 0} th,td{border:1px solid #000;padding:6pt;vertical-align:top} th{background:#eee}
+h3{text-align:center;margin:0 0 8pt 0}
+</style></head><body>
+<h3>Fiche Mouvement d’Affectation</h3>
+
+<table>
+  <tr><th>N° Affectation</th><td>{{ aff.num }}</td><th>Matricule</th><td>{{ aff.matricule }}</td></tr>
+  <tr><th>Nom &amp; Prénom</th><td colspan="3">{{ aff.nom }} {{ aff.prenom }}</td></tr>
+</table>
+
+<h4>Partie ANCIENNE</h4>
+<table>
+  <tr><th>Affectation</th><td>{{ aff.anc_aff_code }} — {{ aff.anc_aff_lib }}</td>
+      <th>Date</th><td>{% if aff.anc_date_aff %}{{ aff.anc_date_aff|date:"d/m/Y" }}{% endif %}</td></tr>
+  <tr><th>Fonction</th><td>{{ aff.anc_fct_code }} — {{ aff.anc_fct_lib }}</td>
+      <th>Date</th><td>{% if aff.anc_date_fct %}{{ aff.anc_date_fct|date:"d/m/Y" }}{% endif %}</td></tr>
+</table>
+
+<h4>Partie NOUVELLE</h4>
+<table>
+  <tr><th>Affectation</th><td>{{ aff.nv_aff_code }} — {{ aff.nv_aff_lib }}</td>
+      <th>Date</th><td>{% if aff.nv_date_aff %}{{ aff.nv_date_aff|date:"d/m/Y" }}{% endif %}</td></tr>
+  <tr><th>Fonction</th><td>{{ aff.nv_fct_code }} — {{ aff.nv_fct_lib }}</td>
+      <th>Date</th><td>{% if aff.nv_date_fct %}{{ aff.nv_date_fct|date:"d/m/Y" }}{% endif %}</td></tr>
+</table>
+</body></html>

@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+<link rel="stylesheet" href="{% static 'vivier/vivier_list.css' %}">
+<style>
+  /* En-tête bordeaux BCP */
+  .table-vivier thead th{
+    background-color:#B23214 !important;
+    color:#fff !important;
+    border-color:#B23214 !important;
+    vertical-align: middle;
+  }
+</style>
+<h2>Vivier</h2><br><br><br>
+
+<div class="row g-2 align-items-end mb-3">
+  <!-- ⬅️ Filtre -->
+  <div class="col-12 col-lg-6">
+    <form method="get" class="row g-2">
+      <div class="col-12 col-sm-8">
+        <input name="q" class="form-control"
+               placeholder="Rechercher N°, Fonction, Direction…"
+               value="{{ q|default:'' }}">
+      </div>
+      <div class="col-12 col-sm-4 d-flex gap-2">
+        <button class="btn btn-primary w-100" type="submit">Rechercher</button>
+        {% if q %}
+          <a class="btn btn-outline-secondary w-100" href="{% url 'vivier:list' %}">
+            Réinitialiser
+          </a>
+        {% endif %}
+      </div>
+    </form>
+  </div>
+
+  <!-- 🔹 Espace entre les deux blocs (mobile/tablette uniquement) -->
+  <div class="col-12 d-lg-none my-2"></div>
+
+  <!-- ➡️ Boutons CRUD -->
+  <div class="col-12 col-lg-6">
+    <div class="d-flex justify-content-lg-end gap-2">
+      <a class="btn btn-success" href="{% url 'vivier:create' %}">
+        <i class="fa fa-plus me-1"></i> Ajouter
+      </a>
+      <button type="button" class="btn btn-warning" onclick="goToAction('edit')">
+        ✏️ Modifier
+      </button>
+      <button type="button" class="btn btn-danger" onclick="goToAction('delete')">
+        🗑️ Supprimer
+      </button>
+    </div>
+  </div>
+</div>
+
+<form id="vivierForm">
+  <div class="table-responsive">
+    <table class="table table-sm table-hover align-middle table-vivier">
+      <thead>
+        <tr>
+          <th style="width: 80px;">Sélection</th>
+          <th>N°</th>
+          <th>Date</th>
+          <th>Fonction cible</th>
+          <th>Direction / Réseau</th>
+          <th>Validé</th>
+          <th>Date de validation</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for v in viviers %}
+        <tr>
+          <td class="text-center">
+            <input type="radio" name="selected_vivier" value="{{ v.pk }}">
+          </td>
+          <td class="fw-semibold">{{ v.NumCommission }}</td>
+          <td>{{ v.DateCreation|date:"d/m/Y" }}</td>
+          <td>{{ v.FonctionCible }}</td>
+          <td>{{ v.DirectionReseau|default:"—" }}</td>
+          <td>
+            {% if v.Valide %}
+              <span class="badge bg-success">Oui</span>
+            {% else %}
+              <span class="badge bg-secondary">Non</span>
+            {% endif %}
+          </td>
+          <td>{{ v.DateValidation|date:"d/m/Y"|default:"—" }}</td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="7" class="text-center text-muted">Aucun vivier pour l’instant.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</form>
+
+<script>
+function goToAction(action) {
+  const selected = document.querySelector('input[name="selected_vivier"]:checked');
+  if (!selected) {
+    alert("❗ Veuillez sélectionner un vivier.");
+    return;
+  }
+  const id = selected.value;
+
+  let url = "";
+  if (action === "edit") {
+    url = "{% url 'vivier:update' 0 %}".replace('/0/', `/${id}/`);
+  } else if (action === "delete") {
+    url = "{% url 'vivier:delete' 0 %}".replace('/0/', `/${id}/`);
+    if (!confirm("Êtes-vous sûr de vouloir supprimer ce vivier ?")) return;
+  }
+
+  if (url) window.location.href = url;
+}
+</script>
+
+{% endblock %}

@@ -1,0 +1,100 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card border-danger shadow-lg">
+                <div class="card-header bg-danger text-white">
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-exclamation-triangle fa-2x me-3"></i>
+                        <h2 class="mb-0">Confirmation de suppression</h2>
+                    </div>
+                </div>
+
+                <div class="card-body">
+                    <div class="alert alert-danger">
+                        <div class="d-flex">
+                            <i class="fas fa-radiation fa-2x me-3"></i>
+                            <div>
+                                <h4 class="alert-heading">Action irréversible !</h4>
+                                <p class="mb-0">
+                                    Vous êtes sur le point de supprimer définitivement l'agent :
+                                    <strong>{{ agent.Matricule }} - {{ agent.Nom }} {{ agent.Prenom }}</strong>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card mb-4">
+                        <div class="card-header bg-light">
+                            <i class="fas fa-info-circle me-2"></i>Détails de l'agent
+                        </div>
+                        <ul class="list-group list-group-flush">
+                            <li class="list-group-item">
+                                <strong>Matricule :</strong> {{ agent.Matricule }}
+                            </li>
+                            <li class="list-group-item">
+                                <strong>Nom complet :</strong> {{ agent.Civilite }} {{ agent.Nom }} {{ agent.Prenom }}
+                            </li>
+                            <li class="list-group-item">
+                                <strong>Affectation :</strong> {{ agent.AffectationLibelle|default:"-" }}
+                            </li>
+                        </ul>
+                    </div>
+
+                    <form method="post" id="deleteForm">
+                        {% csrf_token %}
+                        <div class="mb-3 form-check">
+                            <input type="checkbox" class="form-check-input" id="confirmCheck" required>
+                            <label class="form-check-label text-danger" for="confirmCheck">
+                                Je confirme vouloir supprimer cet agent définitivement
+                            </label>
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <button type="submit" class="btn btn-danger" id="deleteButton" disabled>
+                                <i class="fas fa-trash-alt me-2"></i>Supprimer définitivement
+                            </button>
+                            <a href="{% url 'agents:view' agent.Matricule %}" class="btn btn-outline-secondary">
+                                <i class="fas fa-times me-2"></i>Annuler
+                            </a>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="card-footer text-muted small">
+                    <i class="fas fa-shield-alt me-2"></i>Cette action sera enregistrée dans les journaux système
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- JS de confirmation -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const checkBox = document.getElementById('confirmCheck');
+    const deleteBtn = document.getElementById('deleteButton');
+
+    checkBox.addEventListener('change', function() {
+        deleteBtn.disabled = !this.checked;
+    });
+
+    document.getElementById('deleteForm').addEventListener('submit', function() {
+        deleteBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status"></span>Suppression...';
+        deleteBtn.disabled = true;
+    });
+});
+</script>
+
+<style>
+    .card { border-radius: 10px; }
+    .card-header { border-radius: 10px 10px 0 0 !important; }
+    #deleteButton:disabled { opacity: 0.6; }
+    .form-check-input:checked {
+        background-color: #dc3545;
+        border-color: #dc3545;
+    }
+</style>
+{% endblock %}

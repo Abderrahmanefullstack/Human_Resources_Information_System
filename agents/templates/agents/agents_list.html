@@ -1,0 +1,170 @@
+{% extends 'base.html' %}
+{% block content %}
+{% load static %}
+{% load custom_tags %}
+
+<h2>Agents</h2><br><br><br>
+
+<!-- Import Excel (identique à tes noms/URL) -->
+<form id="importForm" method="POST" enctype="multipart/form-data" action="{% url 'agents:import_excel' %}" class="mb-4">
+  {% csrf_token %}
+  <div class="input-group">
+    <input id="excelInput" type="file" name="excel_file" accept=".xlsx" required class="form-control">
+  </div>
+</form>
+
+<!-- Dernier import (isolé proprement, sans table inutile autour) -->
+{% if recent_imports %}
+<div class="card mt-4 shadow-sm">
+  <div class="card-header bg-primary text-white">
+    <i class="fas fa-file-import me-2"></i>Dernier import effectué
+  </div>
+  <ul class="list-group list-group-flush">
+    <li class="list-group-item d-flex justify-content-between">
+      <span><i class="fas fa-file-excel text-success me-2"></i>{{ recent_imports.0.filename }}</span>
+      <small class="text-muted">{{ recent_imports.0.import_date|date:"d/m/Y H:i" }}</small>
+    </li>
+  </ul>
+</div>
+{% endif %}
+
+<!-- Filtres (un seul formulaire GET, pas de duplication) -->
+<form method="get" class="row align-items-end g-2 mb-3 mt-3">
+  <div class="col-md-4">
+    <input type="text" name="q" class="form-control form-control-sm" style="max-width: 100%;" placeholder="🔍 Recherche (nom, prénom, matricule...)" value="{{ filters.q }}">
+  </div>
+
+  <div class="col-md-2">
+    <select name="annee_retraite" class="form-select form-select-sm">
+      <option value="">🎂 Retraités en...</option>
+      {% for year in 2025|get_range_until:2050 %}
+        <option value="{{ year }}" {% if filters.annee_retraite|default:'' == year|stringformat:"s" %}selected{% endif %}>🧓 {{ year }}</option>
+      {% endfor %}
+    </select>
+  </div>
+
+  <div class="col-md-2">
+    <select name="genre" class="form-select form-select-sm">
+      <option value="">🎭 Tous genres</option>
+      <option value="H" {% if filters.genre == 'H' %}selected{% endif %}>👨 Hommes</option>
+      <option value="F" {% if filters.genre == 'F' %}selected{% endif %}>👩 Femmes</option>
+    </select>
+  </div>
+
+  <div class="col-md-4 text-end">
+    <button type="submit" class="btn btn-sm btn-primary">🔎 Filtrer</button>
+    <a href="{% url 'agents:list' %}" class="btn btn-sm btn-secondary">♻️ Réinitialiser</a>
+  </div>
+</form>
+
+<div class="alert alert-info">Le nombre d'agents trouvés : {{ agents|length }}</div>
+
+{% if agents %}
+<form id="agentForm" method="get">
+  <!-- Boutons d’action (noms conservés) -->
+  <div class="mb-3 d-flex justify-content-end gap-2">
+    
+    <a href="{% url 'agents:export_excel' %}?{{ request.GET.urlencode }}" class="btn btn-success me-auto">
+      Télécharger le Fichier (Effectif)
+    </a>
+
+    <button type="button" class="btn btn-info" onclick="goToAction('view')">👁️ Afficher</button>
+    <button type="button" class="btn btn-warning" onclick="goToAction('edit')">✏️ Modifier</button>
+    <button type="button" class="btn btn-danger" onclick="goToAction('delete')">🗑️ Supprimer</button>
+    
+  </div>
+
+<table class="table table-bordered align-middle">
+  <thead>
+    <tr>
+      <th style="background-color:#B23214; color:#fff;">Sélection</th>
+      <th style="background-color:#B23214; color:#fff;">Matricule</th>
+      <th style="background-color:#B23214; color:#fff;">Civilité</th>
+      <th style="background-color:#B23214; color:#fff;">Nom</th>
+      <th style="background-color:#B23214; color:#fff;">Prénom</th>
+      <th style="background-color:#B23214; color:#fff;">N° CNSS</th>
+      <th style="background-color:#B23214; color:#fff;">Date Naissance</th>
+      <th style="background-color:#B23214; color:#fff;">Date d'entrée</th>
+      <th style="background-color:#B23214; color:#fff;">Situation Effectif</th>
+      <th style="background-color:#B23214; color:#fff;">Affectation Code</th>
+      <th style="background-color:#B23214; color:#fff;">Affectation Libellé</th>
+      <th style="background-color:#B23214; color:#fff;">Arborescence Affectation</th>
+    </tr>
+  </thead>
+    <tbody>
+      {% for agent in agents %}
+      <tr>
+        <td class="text-center">
+          <input type="radio" name="selected_agent" value="{{ agent.Matricule }}">
+        </td>
+        <td class="text-center">{{ agent.matricule_formate }}</td>
+        <td>{{ agent.Civilite }}</td>
+        <td>{{ agent.Nom }}</td>
+        <td>{{ agent.Prenom }}</td>
+        <td class="text-center">{{ agent.NoAffiliationCNSS }}</td>
+        <td class="text-center">{{ agent.DateNaissance|date:"d/m/Y" }}</td>
+        <td class="text-center">{{ agent.DateEntree|date:"d/m/Y" }}</td>
+        <td>{{ agent.SituationEffectifLibelle }}</td>
+        <td class="text-center">{{ agent.affectationCode_formate }}</td>
+        <td>{{ agent.AffectationLibelle }}</td>
+        <td>{{ agent.ArborescenceAffectation }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</form>
+{% else %}
+<div class="alert alert-warning">Aucun agent trouvé.</div>
+{% endif %}
+
+<!-- Scripts (identiques en logique, juste rangés proprement) -->
+<script>
+  function confirmImport() {
+    return confirm("⚠️ Cela va supprimer toutes les données existantes. Continuer ?");
+  }
+
+  // Auto-submit dès qu’un fichier est choisi
+  const excelInput = document.getElementById('excelInput');
+  if (excelInput) {
+    excelInput.addEventListener('change', function () {
+      if (this.files && this.files.length) {
+        if (confirmImport()) {
+          document.getElementById('importForm').submit();
+        } else {
+          this.value = '';
+        }
+      }
+    });
+  }
+
+  function goToAction(action) {
+    console.log("🔍 Bouton cliqué :", action);
+
+    const selected = document.querySelector('input[name="selected_agent"]:checked');
+    if (!selected) {
+      alert("❗ Veuillez sélectionner un agent.");
+      console.warn("⚠️ Aucun agent sélectionné");
+      return;
+    }
+
+    const matricule = selected.value;
+    console.log("✅ Agent sélectionné :", matricule);
+
+    let url = "";
+    if (action === "view") {
+      url = `/agents/${matricule}/`;
+    } else if (action === "edit") {
+      url = `/agents/${matricule}/modifier/`;
+    } else if (action === "delete") {
+      url = `/agents/${matricule}/supprimer/`;
+    } else {
+      console.error("❌ Action inconnue :", action);
+      return;
+    }
+
+    console.log("➡️ Redirection vers :", url);
+    window.location.href = url;
+  }
+</script>
+
+{% endblock %}
