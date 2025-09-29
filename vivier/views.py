@@ -152,29 +152,6 @@ def _render_html_to_pdf(template_name: str, context: dict, filename: str):
     return resp
 
 
-def draw_grid(c, W, H, step=20 * mm):
-    """Grille de debug (pour caler les coordonnées)."""
-    c.setStrokeGray(0.85)
-    c.setFillGray(0.5)
-    c.setLineWidth(0.2)
-    x = 0
-    while x <= W:
-        c.line(x, 0, x, H)
-        c.setFont(BASE_FONT, 6)
-        c.drawString(x + 1, 2, f"{int(x)}")
-        x += step
-    y = 0
-    while y <= H:
-        c.line(0, y, W, y)
-        c.setFont(BASE_FONT, 6)
-        c.drawString(2, y + 1, f"{int(y)}")
-        y += step
-    c.setStrokeGray(0.3)
-    c.setLineWidth(0.6)
-    c.line(0, 0, W, 0)
-    c.line(0, 0, 0, H)
-
-
 def draw_cross(c, x, y, size=4 * mm):
     """Petit repère en croix pour tester un point exact."""
     c.setStrokeGray(0.2)
@@ -716,23 +693,18 @@ def _pdf_response(draw_pages_fn, filename="document.pdf"):
     return resp
 
 
-from django.contrib.auth.decorators import login_required
-from django.db.models import Q
-from django.http import HttpResponse
-from django.utils import timezone
-from .models import Vivier
-
-
-@login_required
 def export_agents_excel(request, pk):
-    # imports locaux (aucune autre ligne de ton fichier n'est modifiée)
+    """
+    Exporte un fichier Excel pour PUBLIPOSTAGE (5 colonnes) des agents éligibles (Trajectoire = Oui).
+    Colonnes: Matricule | NomPrenom | Fonction | Affectation | Succursale
+    """
     from io import BytesIO
     from openpyxl import Workbook
     from openpyxl.styles import Font, Alignment, PatternFill, Border, Side
 
-    # On reprend EXACTEMENT la même logique que dans vivier_update pour construire "agents"
     v = get_object_or_404(Vivier.objects.using("default"), pk=pk)
 
+    # Reprend la logique de vivier_update
     agents = []
     if v.FonctionCible:
         try:
@@ -744,80 +716,39 @@ def export_agents_excel(request, pk):
             ag = r.get("agent")
             if not ag:
                 continue
-            com = (
-                Commission.objects.using("default")
-                .filter(Vivier=v, Matricule=str(ag.Matricule))
-                .first()
-            )
+
             agents.append(
                 {
                     "matricule": ag.Matricule,
-                    "nom": ag.Nom,
-                    "prenom": ag.Prenom,
-                    "date_entree": getattr(ag, "DateEntree", None),
-                    "anciennete_cpm": getattr(ag, "AncienneteAcquiseCPM", None),
-                    "fonction_code": getattr(ag, "FonctionCode", "") or "",
+                    "nom": ag.Nom or "",
+                    "prenom": ag.Prenom or "",
                     "fonction_libelle": getattr(ag, "FonctionLibelle", "") or "",
-                    "date_fonction": getattr(ag, "DateEffetFonction", None),
-                    "anciennete_fonction": getattr(ag, "DateEffetFonction", None),
-                    "aff_code": getattr(ag, "AffectationCode", "") or "",
                     "aff_lib": getattr(ag, "AffectationLibelle", "") or "",
                     "reseau": extract_direction_from_arbo(
                         getattr(ag, "ArborescenceAffectation", "") or ""
                     ),
                     "trajectoire": bool(r.get("trajectoire")),
-                    "exception": bool(r.get("exception")),
-                    "sanction": getattr(com, "Sanction", "") or "",
-                    "pi_n1": getattr(com, "PI_n_1", "") or "",
-                    "pi_n2": getattr(com, "PI_n_2", "") or "",
-                    "pi_n3": getattr(com, "PI_n_3", "") or "",
-                    "avis": getattr(com, "AvisCommission", "") or "",
-                    "note": getattr(com, "Note", "") or "",
-                    "decision": getattr(com, "Decision", "") or "",
                 }
             )
 
-    # Filtre "traj" identique à la page
-    traj = (request.GET.get("traj") or "").lower()
-    if traj == "oui":
-        agents = [a for a in agents if a["trajectoire"]]
-    elif traj == "non":
-        agents = [a for a in agents if a["exception"]]
+    # On force ici Trajectoire = Oui (même si l’utilisateur n’a pas cliqué le filtre)
+    agents = [a for a in agents if a["trajectoire"]]
 
-    # En-têtes alignés sur ton tableau
-    headers = [
-        "Matricule",
-        "Nom",
-        "Prénom",
-        "Date d'entrée",
-        "Ancienneté CPM",
-        "Fonction Code",
-        "Fonction Libellé",
-        "Date fonction occupée",
-        "Anc. fonction",
-        "Affectation Code",
-        "Affectation Libellé",
-        "Réseau",
-        "Trajectoire",
-        "Sanction",
-        "PI N-1",
-        "PI N-2",
-        "PI N-3",
-        "Avis de la commission",
-        "Note",
-        "Décision",
-    ]
+    # Si tu veux empêcher l’export quand traj!=oui dans l’URL, tu peux aussi faire :
+    # if (request.GET.get("traj") or "").lower() != "oui":
+    #     return HttpResponse("Veuillez sélectionner Trajectoire = Oui.", status=400)
+
+    # En-têtes pour publipostage
+    headers = ["Matricule", "NomPrenom", "Fonction", "Affectation", "Succursale"]
 
     wb = Workbook()
     ws = wb.active
 
-    # 🔒 Titre d’onglet : nettoyer caractères interdits Excel et limiter à 31
+    # Titre d’onglet sécurisé (pas de / etc.)
     raw_title = f"Vivier {v.NumCommission}"
     forbidden = set(r":\/?*[]")
     safe_title = "".join("-" if ch in forbidden else ch for ch in raw_title).strip()
-    if not safe_title:
-        safe_title = "Vivier"
-    ws.title = safe_title[:31]
+    ws.title = (safe_title or "Vivier")[:31]
 
     # Styles
     header_font = Font(bold=True)
@@ -826,7 +757,7 @@ def export_agents_excel(request, pk):
     thin = Side(style="thin", color="DDDDDD")
     border = Border(left=thin, right=thin, top=thin, bottom=thin)
 
-    # En-têtes
+    # Ligne d’en-têtes
     ws.append(headers)
     for cell in ws[1]:
         cell.font = header_font
@@ -835,67 +766,42 @@ def export_agents_excel(request, pk):
         cell.border = border
     ws.freeze_panes = "A2"
 
-    max_len = [len(h) for h in headers]
+    # Lignes de données
+    widths = [len(h) for h in headers]
     row_idx = 2
     for a in agents:
+        nom_prenom = f"{a['nom']} {a['prenom']}".strip()
         row = [
             a["matricule"] or "",
-            a["nom"] or "",
-            a["prenom"] or "",
-            a["date_entree"] or "",
-            a["anciennete_cpm"] or "—",
-            a["fonction_code"] or "",
+            nom_prenom,
             a["fonction_libelle"] or "",
-            a["date_fonction"] or "",
-            a["anciennete_fonction"] or "—",
-            a["aff_code"] or "",
             a["aff_lib"] or "",
             a["reseau"] or "",
-            ("Oui" if a["trajectoire"] else "Non"),
-            a["sanction"] or "—",
-            a["pi_n1"] or "—",
-            a["pi_n2"] or "—",
-            a["pi_n3"] or "—",
-            a["avis"] or "—",
-            a["note"] or "—",
-            {"RETENU": "Retenu(e)", "NON_RETENU": "Non retenu(e)"}.get(
-                a["decision"], "-"
-            ),
         ]
         ws.append(row)
 
-        # bordures
+        # Bordures
         for cell in ws[row_idx]:
             cell.border = border
-        # centrages utiles
-        for col in (1, 4, 8, 13, 19, 20):
-            ws.cell(row=row_idx, column=col).alignment = center
 
-        # largeur auto
+        # Ajustement largeurs
         for i, val in enumerate(row):
-            s = val.strftime("%d/%m/%Y") if hasattr(val, "strftime") else str(val)
-            max_len[i] = max(max_len[i], len(s))
+            s = str(val)
+            widths[i] = max(widths[i], len(s))
 
         row_idx += 1
 
-    # Ajuster largeurs
-    for i, width in enumerate(max_len, start=1):
-        ws.column_dimensions[ws.cell(row=1, column=i).column_letter].width = min(
-            60, max(10, width + 2)
-        )
+    # Largeurs de colonnes
+    from openpyxl.utils import get_column_letter
 
-    # Format date (colonnes 4 et 8)
-    date_fmt = "DD/MM/YYYY"
-    for col in (4, 8):
-        for r in range(2, row_idx):
-            cell = ws.cell(row=r, column=col)
-            if hasattr(cell.value, "strftime"):
-                cell.number_format = date_fmt
+    for i, w in enumerate(widths, start=1):
+        ws.column_dimensions[get_column_letter(i)].width = min(60, max(12, w + 2))
 
-    # Réponse HTTP
+    # Fichier
     now = timezone.now().strftime("%Y%m%d_%H%M%S")
     safe_num = str(v.NumCommission).replace("/", "_")
-    filename = f"Vivier_{safe_num}_Agents_{now}.xlsx"
+    filename = f"Fiches_{safe_num}_TrajOui_{now}.xlsx"
+
     buf = BytesIO()
     wb.save(buf)
     buf.seek(0)

@@ -223,10 +223,18 @@
           <button type="button" class="btn btn-outline-secondary" id="btnCompact">Compact</button>
         </div>
 
-        <a href="{% url 'vivier:export_agents_excel' v.pk %}?{{ request.GET.urlencode }}"
-           class="btn btn-success btn-sm export-btn">
-          <i class="fa-regular fa-file-excel me-1"></i> Exporter Excel
-        </a>
+        {% if request.GET.traj == 'oui' %}
+  <a href="{% url 'vivier:export_agents_excel' v.pk %}?{{ request.GET.urlencode }}"
+     class="btn btn-success btn-sm export-btn">
+    <i class="fa-regular fa-file-excel me-1"></i> Exporter Excel
+  </a>
+{% else %}
+  <button type="button" class="btn btn-success btn-sm export-btn" disabled
+          title="Sélectionnez Trajectoire = Oui pour activer l’export">
+    <i class="fa-regular fa-file-excel me-1"></i> Exporter Excel
+  </button>
+{% endif %}
+
       </div>
     </div>
   </div>
