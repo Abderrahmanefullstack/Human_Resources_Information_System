@@ -1,12 +1,23 @@
 import re
+import os
+from django.utils import timezone as dj_tz
+import datetime
 from django.shortcuts import render, redirect, get_object_or_404
 from django.db.models import Q
 from django.contrib import messages
 from django.db import transaction
 from django.utils import timezone
 from datetime import date
+import openpyxl
+from openpyxl import Workbook
+from openpyxl.styles import Font, Alignment, PatternFill
+from io import BytesIO
+from openpyxl import Workbook
+from openpyxl.styles import Font, Alignment, PatternFill, Border, Side
 import tempfile
-import os
+from io import BytesIO
+from django.http import HttpResponse
+
 from django.http import (
     Http404,
     HttpResponse,
@@ -20,13 +31,14 @@ from reportlab.pdfgen import canvas  # (tu peux laisser si tu t’en sers ailleu
 from reportlab.lib.pagesizes import A4
 from django import forms
 from django.contrib.auth.decorators import login_required
-from io import BytesIO
 from django.template.loader import get_template
 from xhtml2pdf import pisa
 
 from entites.models import Entite
 from fonctions.models import Fonction
 from .models import Affectation
+from agents.models import Agent
+from vivier.utils import extract_direction_from_arbo
 from .forms import (
     ChoixAgentForm,
     ChoixTypeForm,
@@ -1021,3 +1033,224 @@ def _wizard_progress(request):
     if isinstance(lst, list) and isinstance(idx, int) and lst:
         return idx + 1, len(lst)
     return None, None
+
+
+def affectation_export_excel(request, num, annee):
+    """
+    Exporte UNE affectation (N° num/annee) en 1 ligne Excel pour publipostage Word.
+    """
+    numero = f"{str(num).zfill(3)}/{annee}"
+    a = get_object_or_404(
+        Affectation.objects.using("default"), NumeroAffectation=numero
+    )
+
+    # Agent (nom/prénom, arbo pour la succursale)
+    ag = Agent.objects.using("default").filter(Matricule=str(a.Matricule)).first()
+
+    nom = getattr(ag, "Nom", "") or ""
+    prenom = getattr(ag, "Prenom", "") or ""
+    nom_prenom = f"{nom} {prenom}".strip()
+
+    # “Succursale” (segment réseau) depuis l’arborescence actuelle de l’agent
+    succursale = extract_direction_from_arbo(
+        getattr(ag, "ArborescenceAffectation", "") or ""
+    )
+
+    headers = [
+        "NumeroAffectation",
+        "DateLettre",
+        "Matricule",
+        "NomPrenom",
+        "Civilite",
+        "Anc_Entite_Code",
+        "Anc_Entite_Libelle",
+        "Anc_DateAffectation",
+        "Anc_Fonction_Code",
+        "Anc_Fonction_Libelle",
+        "Anc_DateFonction",
+        "New_Entite_Code",
+        "New_Entite_Libelle",
+        "New_DateAffectation",
+        "New_Fonction_Code",
+        "New_Fonction_Libelle",
+        "New_DateFonction",
+        "Succursale",
+    ]
+
+    row = [
+        a.NumeroAffectation,
+        getattr(a, "DateLettre", None),
+        a.Matricule,
+        nom_prenom,
+        getattr(a, "Civilite", "") or "",
+        getattr(a, "CodeEntiteAncien", "") or "",
+        getattr(a, "LibelleEntiteAncien", "") or "",
+        getattr(a, "DateAffectationAncien", None),
+        getattr(a, "CodeFonctionAncien", "") or "",
+        getattr(a, "LibelleFonctionAncien", "") or "",
+        getattr(a, "DateFonctionAncien", None),
+        getattr(a, "CodeEntiteNouveau", "") or "",
+        getattr(a, "LibelleEntiteNouveau", "") or "",
+        getattr(a, "DateAffectationNouveau", None),
+        getattr(a, "CodeFonctionNouveau", "") or "",
+        getattr(a, "LibelleFonctionNouveau", "") or "",
+        getattr(a, "DateFonctionNouveau", None),
+        succursale,
+    ]
+
+    # -- Excel (openpyxl) --
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Publipostage"
+
+    # Styles d’en-tête
+    header_font = Font(bold=True)
+    header_fill = PatternFill("solid", fgColor="F2F2F2")
+    center = Alignment(horizontal="center", vertical="center")
+    thin = Side(style="thin", color="DDDDDD")
+    border = Border(left=thin, right=thin, top=thin, bottom=thin)
+
+    ws.append(headers)
+    for c in ws[1]:
+        c.font = header_font
+        c.fill = header_fill
+        c.alignment = center
+        c.border = border
+
+    ws.append(row)
+    # Bordures & formats
+    for c in ws[2]:
+        c.border = border
+    # dates: DateLettre, Anc/New dates…
+    for col_idx in (2, 8, 11, 14, 17):
+        ws.cell(row=2, column=col_idx).number_format = "DD/MM/YYYY"
+
+    # Largeurs auto
+    for col in range(1, len(headers) + 1):
+        v = max(
+            len(str(ws.cell(row=1, column=col).value or "")),
+            len(str(ws.cell(row=2, column=col).value or "")),
+        )
+        ws.column_dimensions[ws.cell(row=1, column=col).column_letter].width = min(
+            60, v + 2
+        )
+
+    now = timezone.now().strftime("%Y%m%d_%H%M%S")
+    filename = (
+        f"Publipostage_Affectation_{a.NumeroAffectation.replace('/','_')}_{now}.xlsx"
+    )
+
+    buf = BytesIO()
+    wb.save(buf)
+    buf.seek(0)
+
+    resp = HttpResponse(
+        buf.getvalue(),
+        content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    )
+    resp["Content-Disposition"] = f'attachment; filename="{filename}"'
+    return resp
+
+
+def _excel_safe(value):
+    """Rend exportable par Excel (dates/times sans tz)."""
+    if isinstance(value, datetime.datetime):
+        # si aware -> naive
+        if dj_tz.is_aware(value):
+            return dj_tz.make_naive(value, dj_tz.get_current_timezone())
+        return value
+    if isinstance(value, datetime.time):
+        if value.tzinfo is not None:
+            return value.replace(tzinfo=None)
+        return value
+    return value
+
+
+def export_excel(request, num=None, annee=None, pk=None):
+    """
+    Supporte 2 routes :
+    - /affectations/export/<str:num>/<int:annee>/
+    - /affectations/export/<path:pk>/
+    """
+    # 1) Reconstruire la clé NumeroAffectation
+    if pk:
+        numero_aff = str(pk)
+    elif num and annee:
+        numero_aff = f"{num}/{annee}"
+    else:
+        raise Http404("Clé d'affectation manquante.")
+
+    # 2) Charger l'affectation + agent
+    a = get_object_or_404(
+        Affectation.objects.using("default"), NumeroAffectation=numero_aff
+    )
+    agent = Agent.objects.using("default").filter(Matricule=a.Matricule).first()
+
+    # 3) Construire le classeur
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Affectation"
+
+    headers = [
+        "NumeroAffectation",
+        "DateMobilite",
+        "DateLettreAffectation",
+        "Matricule",
+        "Nom",
+        "Prenom",
+        "CodeFonctionAncien",
+        "LibelleFonctionAncien",
+        "DateFonctionAncien",
+        "CodeEntiteAncien",
+        "LibelleEntiteAncien",
+        "DateAffectationAncien",
+        "CodeFonctionNouveau",
+        "LibelleFonctionNouveau",
+        "CodeEntiteNouveau",
+        "LibelleEntiteNouveau",
+        "ChangementAffectation",
+        "ChangementFonction",
+        "CreatedAt",
+        "UpdatedAt",
+    ]
+    ws.append(headers)
+
+    row = [
+        a.NumeroAffectation,
+        _excel_safe(getattr(a, "DateMobilite", None)),
+        _excel_safe(getattr(a, "DateLettreAffectation", None)),
+        a.Matricule,
+        getattr(agent, "Nom", ""),
+        getattr(agent, "Prenom", ""),
+        getattr(a, "CodeFonctionAncien", ""),
+        getattr(a, "LibelleFonctionAncien", ""),
+        _excel_safe(getattr(a, "DateFonctionAncien", None)),
+        getattr(a, "CodeEntiteAncien", ""),
+        getattr(a, "LibelleEntiteAncien", ""),
+        _excel_safe(getattr(a, "DateAffectationAncien", None)),
+        getattr(a, "CodeFonctionNouveau", ""),
+        getattr(a, "LibelleFonctionNouveau", ""),
+        getattr(a, "CodeEntiteNouveau", ""),
+        getattr(a, "LibelleEntiteNouveau", ""),
+        getattr(a, "ChangementAffectation", ""),
+        getattr(a, "ChangementFonction", ""),
+        _excel_safe(getattr(a, "CreatedAt", None)),
+        _excel_safe(getattr(a, "UpdatedAt", None)),
+    ]
+    ws.append(row)
+
+    # 4) Sauvegarde → réponse
+    buf = BytesIO()
+    wb.save(buf)
+    buf.seek(0)
+
+    stamp = dj_tz.now().strftime("%Y%m%d_%H%M%S")
+    safe_key = numero_aff.replace("/", "-")
+    filename = f"Affectation_{safe_key}_{stamp}.xlsx"
+
+    resp = HttpResponse(
+        buf.getvalue(),
+        content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    )
+    resp["Content-Disposition"] = f'attachment; filename="{filename}"'
+    return resp

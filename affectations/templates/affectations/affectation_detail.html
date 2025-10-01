@@ -7,25 +7,21 @@
       <div class="subtitle">N° {{ a.NumeroAffectation }}</div>
     </div>
 
-    <div class="d-flex gap-2">
+    {# Actions à droite #}
+    <div class="d-flex align-items-center gap-2">
       <a href="{% url 'affectations:list' %}" class="btn affx-btn-outline">
         <i class="fas fa-arrow-left me-2"></i>Retour
       </a>
 
-      {# ----- Option A : Dropdown PDF (accès direct aux 3 formats) ----- #}
-      <div class="btn-group">
-  <button type="button" class="btn btn-outline-dark dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
-    <div class="btn-group">
-  <button type="button" class="btn btn-outline-dark dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
-    <i class="fa-solid fa-file-word me-1"></i> Word
-  </button>
-  <ul class="dropdown-menu dropdown-menu-end">
-    <li><a class="dropdown-item" href="{% url 'affectations:docx' pk=a.NumeroAffectation %}?type=aff1">Lettre d’affectation 1 (Word)</a></li>
-    <li><a class="dropdown-item" href="{% url 'affectations:docx' pk=a.NumeroAffectation %}?type=aff2">Lettre d’affectation 2 (Word)</a></li>
-    <li><a class="dropdown-item" href="{% url 'affectations:docx' pk=a.NumeroAffectation %}?type=aff3">Lettre d’affectation 3 (Word)</a></li>
-  </ul>
-</div>
+      {# Export Excel (pour publipostage) #}
+      <a class="btn btn-outline-success"
+     href="{% url 'affectations:export_excel' num=a.NumeroAffectation|slice:':3' annee=a.NumeroAffectation|slice:'4:' %}">
+    <i class="fa-regular fa-file-excel me-1"></i> Exporter Excel
+  </a>
 
+
+      {# Menu Word #}
+      
     </div>
   </div>
 

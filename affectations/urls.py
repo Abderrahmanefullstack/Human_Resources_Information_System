@@ -15,4 +15,5 @@ urlpatterns = [
     path("step2/", views.affectation_step2, name="step2"),
     path("pdf/<path:pk>/", views.affectation_pdf, name="pdf"),
     path("docx/<path:pk>/", views.affectation_docx, name="docx"),
+    path("export/<str:num>/<int:annee>/", views.export_excel, name="export_excel"),
 ]
